@@ -5,6 +5,11 @@
 
 import PROCESSOR from "./prompts/dream-processor.md";
 import DESCRIBER from "./prompts/persona-describer.md";
+import ANALYZER_BASE from "./prompts/dream-analyzer.md";
+import ARCHETYPES from "./prompts/archetypes.md";
+import SYNTHESIZER_BASE from "./prompts/journal-synthesizer.md";
+const ANALYZER = ANALYZER_BASE + "\n\n" + ARCHETYPES;
+const SYNTHESIZER = SYNTHESIZER_BASE + "\n\n" + ARCHETYPES;
 
 const OR = "https://openrouter.ai/api/v1";
 const MAX_BODY = 8 * 1024 * 1024; // photos for the describer arrive as data URLs
@@ -25,6 +30,8 @@ export default {
       if (path === "/api/account" && request.method === "GET") return account(request);
       if (path === "/api/process" && request.method === "POST") return processDream(request, env);
       if (path === "/api/describe" && request.method === "POST") return describe(request, env);
+      if (path === "/api/analyze" && request.method === "POST") return analyze(request, env);
+      if (path === "/api/synthesize" && request.method === "POST") return synthesize(request, env);
       if (path === "/api/video-models" && request.method === "GET") return videoModels(request);
       if (path === "/api/render" && request.method === "POST") return renderStart(request);
       let m = path.match(/^\/api\/render\/([\w.-]+)$/);
@@ -133,8 +140,8 @@ function parseJsonLoose(text) {
 }
 
 // Calls Claude through the dreamer's OpenRouter account, trying models in order.
-async function claude(env, key, system, userContent, maxTokens) {
-  const models = (env.PROCESSOR_MODELS || "anthropic/claude-sonnet-4.5").split(",").map(s => s.trim()).filter(Boolean);
+async function claude(env, key, system, userContent, maxTokens, modelList) {
+  const models = (modelList || env.PROCESSOR_MODELS || "anthropic/claude-sonnet-4.5").split(",").map(s => s.trim()).filter(Boolean);
   let last = null;
   for (const model of models) {
     const r = await or(key, "/chat/completions", {
@@ -238,6 +245,56 @@ async function describe(request, env) {
   let out;
   try { out = parseJsonLoose(res.text); } catch { return json({ error: "invalid_json" }, 502); }
   return json({ result: out, cost: res.cost });
+}
+
+// Journal analysis is cheap (a small model, a few hundred tokens), so it may run on the
+// project's own OpenRouter key (OPENROUTER_SERVER_KEY secret) when the dreamer has not connected one.
+async function analyze(request, env) {
+  const key = userKey(request) || env.OPENROUTER_SERVER_KEY || null;
+  if (!key) return needKey();
+  const b = await body(request);
+  const text = String(b.text || "").trim();
+  if (text.length < 8) return json({ error: "too_short" }, 400);
+  const input = {
+    text: text.slice(0, 6000),
+    date: /^\d{4}-\d{2}-\d{2}$/.test(b.date || "") ? b.date : new Date().toISOString().slice(0, 10),
+    cast: Array.isArray(b.cast) ? b.cast.slice(0, 40) : [],
+    known: b.known && typeof b.known === "object" ? {
+      people: (b.known.people || []).slice(0, 60),
+      places: (b.known.places || []).slice(0, 60),
+      motifs: (b.known.motifs || []).slice(0, 80),
+      symbols: (b.known.symbols || []).slice(0, 60),
+    } : { people: [], places: [], motifs: [], symbols: [] },
+  };
+  if (b.profile && typeof b.profile === "object") {
+    input.profile = {
+      aliases: (b.profile.aliases || []).slice(0, 60),
+      threads: (b.profile.threads || []).slice(0, 12).map(t => ({ name: t.name, description: t.description, keys: t.keys })),
+      notes: String(b.profile.notes || "").slice(0, 800),
+    };
+  }
+  const user = "INPUT (JSON):\n" + JSON.stringify(input) + "\n\nRespond with the single JSON object only.";
+  const res = await claude(env, key, ANALYZER, user, 2000, env.ANALYZE_MODELS);
+  if (!res.ok) return passError(res.response);
+  let out;
+  try { out = parseJsonLoose(res.text); } catch { return json({ error: "invalid_json" }, 502); }
+  return json({ result: out, model: res.model, cost: res.cost });
+}
+
+// Periodic pass over the whole journal: merges aliases, names threads, writes notes for the next analysis.
+async function synthesize(request, env) {
+  const key = userKey(request) || env.OPENROUTER_SERVER_KEY || null;
+  if (!key) return needKey();
+  const b = await body(request);
+  const entries = Array.isArray(b.entries) ? b.entries.slice(-200) : [];
+  if (entries.length < 2) return json({ error: "too_short" }, 400);
+  const input = { cast: Array.isArray(b.cast) ? b.cast.slice(0, 40) : [], entries, previous: b.previous && typeof b.previous === "object" ? b.previous : {} };
+  const user = "INPUT (JSON):\n" + JSON.stringify(input) + "\n\nRespond with the single JSON object only.";
+  const res = await claude(env, key, SYNTHESIZER, user, 4000, env.ANALYZE_MODELS);
+  if (!res.ok) return passError(res.response);
+  let out;
+  try { out = parseJsonLoose(res.text); } catch { return json({ error: "invalid_json" }, 502); }
+  return json({ result: out, model: res.model, cost: res.cost });
 }
 
 async function videoModels(request) {

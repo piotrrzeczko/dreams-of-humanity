@@ -16,6 +16,7 @@
   ],
   "vars": {
     "PROCESSOR_MODELS": "anthropic/claude-sonnet-5.5,anthropic/claude-sonnet-5,anthropic/claude-sonnet-4.5",
+    "ANALYZE_MODELS": "anthropic/claude-sonnet-5.5,anthropic/claude-sonnet-5,anthropic/claude-sonnet-4.5",
     "APP_NAME": "Dreams of Humanity"
   },
   "observability": { "enabled": true }

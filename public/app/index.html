@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Dream Studio · Dreams of Humanity</title>
+<title>Dream Journal · Dreams of Humanity</title>
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500&display=swap">
@@ -17,16 +17,17 @@
   </header>
 
   <nav class="tabs" role="tablist">
-    <button role="tab" data-tab="dream" aria-selected="true">New dream</button>
-    <button role="tab" data-tab="cast" aria-selected="false">Cast <span class="count" id="castCount"></span></button>
+    <button role="tab" data-tab="write" aria-selected="true">Write</button>
     <button role="tab" data-tab="journal" aria-selected="false">Journal <span class="count" id="journalCount"></span></button>
+    <button role="tab" data-tab="map" aria-selected="false">Map</button>
+    <button role="tab" data-tab="cast" aria-selected="false">Cast <span class="count" id="castCount"></span></button>
   </nav>
 
   <!-- CONNECT -->
   <section class="card" id="connectCard" hidden>
     <div class="label"><span>Step one</span></div>
     <h2 class="serif">Connect your own account</h2>
-    <p class="muted">Dream Studio runs on your OpenRouter account. You pay the AI models directly and only for what you use: shaping a dream costs about two cents, a 30-second film a few dollars depending on the model. We never see your card and never store your key on our servers.</p>
+    <p class="muted">Your journal is free. Films run on your own OpenRouter account: you pay the video model directly and only for the films you make (a 30-second film costs a few dollars). We never see your card and never store your key on our servers.</p>
     <div class="row"><button class="btn" id="connectBtn">Connect OpenRouter</button></div>
     <details>
       <summary>I already have an API key</summary>
@@ -46,11 +47,125 @@
     <div class="row"><button class="btn ghost small" id="disconnectBtn">Disconnect</button></div>
   </section>
 
+  <!-- ═════ WRITE TAB ═════ -->
+  <div data-view="write">
+    <section class="intro">
+      <p class="eyebrow-s" id="writeDay"></p>
+      <h1>What did you <em>dream</em>?</h1>
+      <p class="lede">Write it before it fades: fragments are fine, any language. We file the people, places and motifs, and your map grows with every night.</p>
+    </section>
+    <section class="card">
+      <div class="label"><span>The night of</span><input type="date" id="wDate" class="date" aria-label="Night of the dream"></div>
+      <textarea id="wText" rows="8" aria-label="Your dream" placeholder="I was in my grandmother's kitchen, but it was huge, like a station hall…"></textarea>
+      <div id="wCastHint" class="cast-hint" hidden></div>
+      <div class="row">
+        <button class="btn" id="wSave">Save to journal</button>
+        <span class="hint" id="wMsg"></span>
+      </div>
+    </section>
+    <section class="card mini-map" id="wStats" hidden></section>
+  </div>
+
+  <!-- ═════ ENTRY VIEW ═════ -->
+  <div data-view="entry" hidden>
+    <div class="row"><button class="link" id="eBack">← Journal</button></div>
+    <section class="card" id="entryCard">
+      <div class="label"><span id="eDate"></span><span id="eFlags"></span></div>
+      <h3 class="film-title" id="eTitle"></h3>
+      <p class="summary" id="eSummary"></p>
+      <div class="status" id="eBusy" hidden><span class="orb"></span><span>Filing your dream…</span></div>
+      <p class="hint" id="eErr"></p>
+      <div class="facets" id="eFacets"></div>
+      <div id="eEchoWrap" hidden>
+        <div class="label"><span>Echoes from your journal</span></div>
+        <div class="echoes" id="eEchoes"></div>
+      </div>
+      <div id="eSuggestWrap" hidden>
+        <div class="label"><span>Keeps coming back · add to your cast?</span></div>
+        <div class="suggest" id="eSuggest"></div>
+      </div>
+      <details>
+        <summary>Your words</summary>
+        <p class="dream-text" id="eText"></p>
+      </details>
+      <div class="row">
+        <button class="btn" id="eFilm">Make it a film</button>
+        <button class="btn ghost small" id="eReanalyse">Analyse again</button>
+        <button class="btn ghost small danger" id="eDelete">Delete</button>
+      </div>
+      <div class="care notice rose" id="eCare" hidden>This sounded heavy. If you are thinking about hurting yourself, please talk to someone today. In Poland: 116 123 (adults), 116 111 (children and young people), emergency 112.</div>
+    </section>
+  </div>
+
+  <!-- ═════ MAP TAB ═════ -->
+  <div data-view="map" hidden>
+    <section class="intro">
+      <h1>Your dream <em>map</em>.</h1>
+      <p class="lede">Every night is a point. Over weeks, the people, places, symbols and stories that keep returning start to form threads, and some of them turn out to be dreams people have had for thousands of years.</p>
+    </section>
+    <div id="mapEmpty" class="empty" hidden>
+      <div class="moon">☾</div>
+      <p>Your map appears after a few nights.</p>
+      <div class="row center"><button class="btn small" id="mapWrite">Write tonight's dream</button><button class="btn ghost small" id="loadExamples">See it with 14 example dreams</button></div>
+    </div>
+    <div id="mapBody" hidden>
+      <div class="stats" id="mStats"></div>
+      <section class="card insight">
+        <div class="label"><span>What the journal shows</span><span>read across all your dreams</span></div>
+        <ul class="obs" id="mObs" hidden></ul>
+        <div class="row synth"><button class="btn ghost small" id="synthBtn" type="button">Refresh insights</button><span class="hint" id="synthMsg"></span></div>
+      </section>
+      <section class="card">
+        <div class="label"><span>Nights</span><span id="mRange"></span></div>
+        <div class="heat-wrap"><svg id="mHeat" role="img" aria-label="Nights recorded, by week"></svg></div>
+        <div class="legend"><span><i class="lg1"></i>dream</span><span><i class="lg2"></i>several</span><span><i class="lg3"></i>nightmare</span></div>
+      </section>
+      <section class="card">
+        <div class="label"><span>Constellation</span><span>who and what appears together</span></div>
+        <div class="const-wrap"><svg id="mConst" viewBox="0 0 600 460" role="img" aria-label="Recurring people, places and motifs connected when they appear in the same dream"></svg></div>
+      </section>
+      <section class="card">
+        <div class="label"><span>Threads</span><span>appear together again and again</span></div>
+        <div class="threads" id="mThreads"></div>
+      </section>
+      <div class="map-cols">
+        <section class="card">
+          <div class="label"><span>Recurring cast</span></div>
+          <div class="bars" id="mPeople"></div>
+        </section>
+        <section class="card">
+          <div class="label"><span>Recurring places</span></div>
+          <div class="bars" id="mPlaces"></div>
+        </section>
+      </div>
+      <section class="card">
+        <div class="label"><span>Shared with humanity</span><span>dream patterns people report everywhere</span></div>
+        <div class="archs" id="mArch"></div>
+      </section>
+      <div class="map-cols">
+        <section class="card">
+          <div class="label"><span>Symbols</span></div>
+          <div class="cloud" id="mSymbols"></div>
+        </section>
+        <section class="card">
+          <div class="label"><span>Motifs</span></div>
+          <div class="cloud" id="mMotifs"></div>
+        </section>
+      </div>
+      <section class="card">
+        <div class="label"><span>Emotional weather</span><span>by month</span></div>
+        <div class="weather" id="mWeather"></div>
+      </section>
+      <p class="hint center" id="exampleNote" hidden>You are looking at example dreams. <button class="link" id="removeExamples">Remove examples</button></p>
+    </div>
+  </div>
+
   <!-- ═════ DREAM TAB ═════ -->
-  <div data-view="dream">
+  <div data-view="dream" hidden>
     <section class="intro" id="dreamIntro">
-      <h1>Tell me what you <em>dreamed</em>.</h1>
-      <p class="lede">Write it the way you'd say it half-awake, in any language. Mention your cast by name and they'll look the same in every film.</p>
+      <div class="row"><button class="link" id="filmBack">← Back to the dream</button></div>
+      <h1>Turn it into a <em>film</em>.</h1>
+      <p class="lede">We shape this dream into four shots for a 30-second film. Your cast keeps the same look in every film.</p>
     </section>
 
     <section class="card" id="inputCard">
@@ -208,11 +323,14 @@
       <h1>Dream <em>journal</em>.</h1>
       <p class="lede">Everything here lives only in this browser. Nothing is published.</p>
     </section>
+    <input type="search" id="jSearch" placeholder="Search dreams, people, places, motifs…" aria-label="Search the journal">
+    <div class="filter" id="jFilter" hidden></div>
     <div class="journal" id="journal"></div>
   </div>
 
-  <footer>AI-generated films · private use · your journal stays on this device</footer>
+  <footer>Your journal stays on this device · films are AI-generated, for private use</footer>
 </div>
+<script src="/app/map.js"></script>
 <script src="/app/studio.js"></script>
 </body>
 </html>

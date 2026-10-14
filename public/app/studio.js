@@ -109,7 +109,7 @@ function setKey(k) {
 
 async function refreshAccount() {
   const chip = $("acctChip");
-  $("connectCard").hidden = !!apiKey;
+  $("connectCard").hidden = !!apiKey || currentTab !== "dream";
   if (!apiKey) { chip.textContent = "Not connected"; chip.classList.remove("on"); return; }
   chip.textContent = "Connected"; chip.classList.add("on");
   try {
@@ -130,11 +130,17 @@ $("acctClose").onclick = () => { $("acctCard").hidden = true; };
 $("disconnectBtn").onclick = () => { setKey(null); $("acctCard").hidden = true; };
 
 // ── Tabs ────────────────────────────────────────────────
+let currentTab = "write";
 function tab(name) {
-  document.querySelectorAll("[role=tab]").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === name));
+  currentTab = name;
+  const tabFor = { entry: "journal", dream: "journal" }[name] || name;
+  document.querySelectorAll("[role=tab]").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === tabFor));
   document.querySelectorAll("[data-view]").forEach(v => v.hidden = v.dataset.view !== name);
+  $("connectCard").hidden = !!apiKey || name !== "dream";
   if (name === "cast") renderCast();
   if (name === "journal") renderJournal();
+  if (name === "map") renderMap();
+  if (name === "write") renderWriteStats();
   window.scrollTo({ top: 0 });
 }
 document.querySelectorAll("[role=tab]").forEach(b => b.onclick = () => tab(b.dataset.tab));
@@ -268,10 +274,8 @@ const cards = ["inputCard", "thinkCard", "clarifyCard", "msgCard", "resultCard"]
 const show = id => { cards.forEach(c => $(c).hidden = c !== id); $("dreamIntro").hidden = id === "resultCard"; };
 let perspective = "mixed", aspect = "9:16", ctl = null, lastReq = null, current = null;
 
-const draft = store.get("doh_draft");
-$("dream").value = draft || EXAMPLE;
-$("exampleMark").hidden = !!draft;
-$("dream").addEventListener("input", () => { $("exampleMark").hidden = true; store.set("doh_draft", $("dream").value); castHint(); });
+$("exampleMark").hidden = true;
+$("dream").addEventListener("input", castHint);
 document.querySelectorAll("[data-p]").forEach(b => b.onclick = () => { perspective = b.dataset.p; document.querySelectorAll("[data-p]").forEach(x => x.setAttribute("aria-pressed", x === b)); });
 document.querySelectorAll("[data-a]").forEach(b => b.onclick = () => { aspect = b.dataset.a; document.querySelectorAll("[data-a]").forEach(x => x.setAttribute("aria-pressed", x === b)); });
 
@@ -310,11 +314,12 @@ async function handle(o) {
   }
   if (!o || !o.render || !o.render.prompt) { $("msgText").textContent = ERR.invalid_json; $("retryBtn").hidden = false; return show("msgCard"); }
   const used = usedCast(o);
-  current = { id: uid("d"), at: Date.now(), dream: $("dream").value.trim(), perspective, aspect, title: o.title || "Untitled dream", result: o, castIds: used.map(m => m.id), video: null };
+  const base = filmEntry || { id: uid("d"), at: Date.now(), date: today(), dream: $("dream").value.trim(), title: o.title || "Untitled dream" };
+  current = Object.assign(base, { perspective, aspect, result: o, castIds: used.map(m => m.id), video: null });
+  if (!current.title) current.title = o.title || "Untitled dream";
   await idb.put("dreams", current);
   for (const m of used) { m.uses = (m.uses || 0) + 1; await idb.put("cast", m); }
-  store.del("doh_draft");
-  await loadCast(); updateJournalCount();
+  await loadCast(); await loadEntries();
   openResult(current);
 }
 
@@ -369,7 +374,8 @@ async function openResult(d) {
   const os = a.other_scenes || []; $("otherWrap").hidden = !os.length; $("otherWrap").textContent = os.length ? "Other scenes we could film later: " + os.join(" · ") : "";
   $("prompt").textContent = r.prompt;
   $("copyBtn").textContent = "Copy prompt";
-  $("delBtn").textContent = "Delete";
+  $("delBtn").textContent = "Remove film";
+  filmEntry = d;
 
   // player
   if (videoUrl) { URL.revokeObjectURL(videoUrl); videoUrl = null; }
@@ -390,16 +396,18 @@ $("answer").addEventListener("keydown", e => { if (e.key === "Enter") $("answerB
 $("skipBtn").onclick = () => run({ clarification_answer: "(the dreamer skipped the question; render with what you have)" });
 $("msgBack").onclick = () => show("inputCard");
 $("retryBtn").onclick = () => run(lastReq);
-$("newBtn").onclick = () => { current = null; $("dream").value = ""; $("exampleMark").hidden = true; castHint(); show("inputCard"); $("dream").focus(); };
+$("newBtn").textContent = "Reshape";
+$("newBtn").onclick = () => { show("inputCard"); };
+$("filmBack").onclick = () => { if (filmEntry) openEntry(filmEntry); else tab("journal"); };
 $("copyBtn").onclick = () => {
   const txt = $("prompt").textContent;
   const fallback = () => { const d = $("prompt").closest("details"); d.open = true; const s = getSelection(), rg = document.createRange(); rg.selectNodeContents($("prompt")); s.removeAllRanges(); s.addRange(rg); $("copyBtn").textContent = "Selected, copy it"; };
   try { navigator.clipboard.writeText(txt).then(() => { $("copyBtn").textContent = "Copied ✓"; }, fallback); } catch { fallback(); }
 };
 $("delBtn").onclick = async () => {
-  if ($("delBtn").textContent === "Delete") { $("delBtn").textContent = "Tap again to delete"; return; }
-  if (current) { await idb.del("dreams", current.id); await idb.del("videos", current.id); }
-  current = null; updateJournalCount(); $("dream").value = ""; show("inputCard");
+  if ($("delBtn").textContent === "Remove film") { $("delBtn").textContent = "Tap again to remove"; return; }
+  if (current) { current.result = null; current.video = null; await idb.put("dreams", current); await idb.del("videos", current.id); }
+  await loadEntries(); openEntry(current);
 };
 
 // ── Render ──────────────────────────────────────────────
@@ -509,31 +517,298 @@ async function poll(d) {
   }
 }
 
-// ── Journal ─────────────────────────────────────────────
-async function updateJournalCount() { const n = (await idb.all("dreams")).length; $("journalCount").textContent = n || ""; }
-async function renderJournal() {
-  const list = $("journal"); list.replaceChildren();
-  const dreams = (await idb.all("dreams")).sort((a, b) => b.at - a.at);
-  if (!dreams.length) { const e = el("div", "empty"); e.append(el("div", "moon", "☾"), document.createTextNode("Your shaped dreams will rest here.")); list.append(e); return; }
-  dreams.forEach(d => {
-    const b = el("button", "entry"); b.type = "button";
-    const right = el("span", "d", new Date(d.at).toLocaleDateString(undefined, { day: "numeric", month: "short" }));
-    if (d.video && d.video.status === "completed") right.prepend(el("span", "film", "▶ film · "));
-    else if (d.video && d.video.status !== "failed") right.prepend(el("span", "film", "filming · "));
-    b.append(el("span", "t", d.title), right);
-    b.onclick = () => openResult(d);
-    list.append(b);
-  });
+// ── Entries (the journal) ───────────────────────────────
+let entries = [], filmEntry = null, openId = null, jFilter = null;
+const today = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
+async function loadEntries() {
+  entries = (await idb.all("dreams")).map(e => { if (!e.date) e.date = DMap.dateOf(e); return e; });
+  entries.sort((a, b) => b.date.localeCompare(a.date) || b.at - a.at);
+  $("journalCount").textContent = entries.length || "";
 }
+async function updateJournalCount() { await loadEntries(); }
+
+function knownLabels() {
+  const { stats } = DMap.build(entries, cast);
+  const pick = t => [...stats.values()].filter(s => s.type === t && !s.cast).sort((a, b) => b.count - a.count).map(s => s.label);
+  return { people: pick("person").slice(0, 60), places: pick("place").slice(0, 60), motifs: pick("motif").slice(0, 80), symbols: pick("symbol").slice(0, 80) };
+}
+
+// ── Journal profile: what the analyst has learned from the whole journal ──
+// Aliases, named threads, notes for the next analysis and neutral observations.
+// Rebuilt by /api/synthesize every few new dreams; kept on this device.
+let profile = null;
+function loadProfile() {
+  try { profile = JSON.parse(store.get("doh_profile") || "null"); } catch { profile = null; }
+  DMap.setProfile(profile);
+}
+function saveProfile(p) { profile = p; store.set("doh_profile", JSON.stringify(p)); DMap.setProfile(p); }
+function clearProfile() { profile = null; store.del("doh_profile"); DMap.setProfile(null); }
+const analysedReal = () => entries.filter(e => e.analysis && !e.example);
+let synthRunning = false;
+async function synthesize(force) {
+  if (synthRunning) return false;
+  const done = entries.filter(e => e.analysis);
+  if (done.length < 2) return false;
+  synthRunning = true; renderSynthState();
+  try {
+    const index = done.slice().sort((a, b) => a.date.localeCompare(b.date)).slice(-200).map(e => {
+      const a = e.analysis;
+      return { id: e.id, date: e.date, title: e.title, people: (a.people || []).map(p => p.label), places: (a.places || []).map(p => p.label),
+        symbols: a.symbols || [], events: a.events || [], motifs: a.motifs || [], archetypes: a.archetypes || [], emotions: (a.emotions || []).map(x => x.name) };
+    });
+    const prev = profile && !profile.example ? { aliases: profile.aliases, threads: profile.threads, notes: profile.notes } : {};
+    const { result } = await api("/api/synthesize", { body: { cast: cast.map(m => ({ id: m.id, name: m.name, aliases: m.aliases || [], kind: m.kind })), entries: index, previous: prev } });
+    saveProfile(Object.assign({}, result, { at: Date.now(), n: analysedReal().length, example: false }));
+    return true;
+  } catch (err) {
+    if (force) $("synthMsg").textContent = errText(err);
+    return false;
+  } finally {
+    synthRunning = false; renderSynthState();
+    if (currentTab === "map") renderMap();
+  }
+}
+// Re-read the whole journal after the 3rd dream, then after every 5 new ones.
+function maybeSynthesize() {
+  const n = analysedReal().length;
+  const last = profile && !profile.example ? profile.n || 0 : 0;
+  if ((n >= 3 && last === 0) || n - last >= 5) synthesize(false);
+}
+function renderSynthState() {
+  const b = $("synthBtn"); if (!b) return;
+  b.disabled = synthRunning;
+  b.textContent = synthRunning ? "Reading your whole journal…" : "Refresh insights";
+  if (!synthRunning) $("synthMsg").textContent = profile && profile.at && !profile.example ? "Last read " + new Date(profile.at).toLocaleDateString(undefined, { day: "numeric", month: "short" }) + ", " + (profile.n || 0) + " dreams." : "";
+}
+
+// Write
+$("wDate").value = today();
+$("wDate").max = today();
+const wDraft = store.get("doh_wdraft"); if (wDraft) $("wText").value = wDraft;
+$("wText").addEventListener("input", () => { store.set("doh_wdraft", $("wText").value); writeCastHint(); });
+function writeCastHint() {
+  const box = $("wCastHint");
+  if (!cast.length) { box.hidden = true; return; }
+  const text = $("wText").value;
+  box.replaceChildren(document.createTextNode("Your cast: "));
+  cast.forEach((m, i) => { box.append(el("b", mentions(text, m) ? "hit" : "", m.name)); if (i < cast.length - 1) box.append(document.createTextNode(", ")); });
+  box.hidden = false;
+}
+$("writeDay").textContent = new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
+
+$("wSave").onclick = async () => {
+  const text = $("wText").value.trim();
+  if (text.length < 8) { $("wMsg").textContent = "Even a fragment helps, write a few more words."; return; }
+  const e = { id: uid("d"), at: Date.now(), date: $("wDate").value || today(), dream: text, title: text.split(/\s+/).slice(0, 5).join(" ") + "…", analysis: null, status: "pending" };
+  await idb.put("dreams", e);
+  $("wText").value = ""; store.del("doh_wdraft"); $("wMsg").textContent = ""; writeCastHint();
+  await loadEntries();
+  openEntry(e);
+  analyse(e);
+};
+
+function renderWriteStats() {
+  const box = $("wStats"); box.replaceChildren();
+  const real = entries.filter(e => !e.example);
+  if (!real.length) { box.hidden = true; return; }
+  const { stats } = DMap.build(entries, cast);
+  const top = [...stats.values()].filter(s => s.type !== "emotion" && s.count >= 2).sort((a, b) => b.count - a.count).slice(0, 3);
+  const nights = new Set(real.map(e => e.date)).size;
+  box.append(el("div", "label", ""), el("p", "muted", nights + (nights === 1 ? " night" : " nights") + " in your journal." + (top.length ? " Keeps returning: " + top.map(t => t.label + " (" + t.count + ")").join(", ") + "." : "")));
+  box.firstChild.append(el("span", null, "So far"));
+  const go = el("button", "link", "Open your map →"); go.onclick = () => tab("map"); box.append(go);
+  box.hidden = false;
+}
+
+// Analyse
+async function analyse(e) {
+  let analysedOk = false;
+  e.status = "pending"; await idb.put("dreams", e);
+  if (openId === e.id) renderEntry(e);
+  try {
+    const { result } = await api("/api/analyze", { body: { text: e.dream, date: e.date, cast: cast.map(m => ({ id: m.id, name: m.name, aliases: m.aliases || [], kind: m.kind, relation: m.relation || "" })), known: knownLabels(),
+      profile: profile && !profile.example ? { aliases: profile.aliases || [], threads: (profile.threads || []).map(t => ({ name: t.name, description: t.description, keys: t.keys })), notes: profile.notes || "" } : undefined } });
+    e.analysis = result; e.status = "done";
+    if (result.title) e.title = result.title;
+    analysedOk = true;
+  } catch (err) {
+    e.status = "error"; e.error = err.code === "no_key" ? "Automatic filing is not switched on yet. Connect OpenRouter (Make it a film → Connect) or ask the admin to enable it." : errText(err);
+  }
+  await idb.put("dreams", e);
+  await loadEntries();
+  if (openId === e.id) renderEntry(e);
+  if (analysedOk && !e.example) maybeSynthesize();
+}
+
+// Entry view
+function openEntry(e) { openId = e.id; tab("entry"); renderEntry(e); }
+$("eBack").onclick = () => tab("journal");
+
+function facet(label, items, type) {
+  if (!items.length) return null;
+  const row = el("div", "facet"); row.append(el("span", "fl", label));
+  const box = el("div", "chips");
+  items.forEach(t => box.append(el("span", "chip " + type, t)));
+  row.append(box); return row;
+}
+
+function renderEntry(e) {
+  const a = e.analysis;
+  $("eDate").textContent = new Date(e.date + "T12:00:00").toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  const flags = [];
+  if (a && a.nightmare) flags.push("nightmare"); if (a && a.lucid) flags.push("lucid"); if (e.example) flags.push("example");
+  $("eFlags").textContent = flags.join(" · ");
+  $("eTitle").textContent = e.title || "Untitled dream";
+  $("eSummary").textContent = (a && a.summary) || "";
+  $("eText").textContent = e.dream;
+  $("eBusy").hidden = e.status !== "pending";
+  $("eErr").textContent = e.status === "error" ? e.error || "Couldn't file this dream." : "";
+  $("eCare").hidden = !(a && a.care);
+  const f = $("eFacets"); f.replaceChildren();
+  if (a) {
+    const ci = DMap.castIndex(cast);
+    const name = (p, kind) => { const m = (p.cast_id && ci.byId.get(p.cast_id)) || ci.byTerm.get(String(p.label || "").toLowerCase().trim()); return m ? "◐ " + m.name : p.label; };
+    [facet("People", (a.people || []).map(p => name(p)), "person"), facet("Places", (a.places || []).map(p => name(p)), "place"),
+     facet("Symbols", a.symbols || [], "symbol"), facet("What happens", a.events || [], "event"),
+     facet("Motifs", a.motifs || [], "motif"), facet("Feelings", (a.emotions || []).map(x => x.name + " " + "•".repeat(Math.max(1, Math.min(5, x.intensity || 3)))), "emotion"),
+     facet("Time", a.time_refs || [], "time"), facet("Objects", a.objects || [], "object")].filter(Boolean).forEach(r => f.append(r));
+    // shared with humanity: dream themes and figures people everywhere report
+    const arch = [...new Set([...(a.archetypes || []), ...(a.people || []).map(p => p.archetype).filter(Boolean)])];
+    if (arch.length) {
+      const row = el("div", "facet shared"); row.append(el("span", "fl", "Shared with humanity"));
+      const box = el("div", "chips");
+      arch.forEach(id => { const c = el("span", "chip archetype", DMap.archName(id)); const d = DMap.ARCHETYPES[id]; if (d) c.title = d[2]; box.append(c); });
+      row.append(box); f.append(row);
+    }
+    // threads this dream belongs to
+    const th = [...new Set([...((profile && profile.threads) || []).filter(t => (t.entry_ids || []).includes(e.id)).map(t => t.name), ...(a.threads || [])])];
+    if (th.length) {
+      const row = el("div", "facet"); row.append(el("span", "fl", "Part of"));
+      const box = el("div", "chips");
+      th.forEach(n => box.append(el("span", "chip story", n)));
+      row.append(box); f.append(row);
+    }
+  }
+  // echoes
+  const ec = a ? DMap.echoes(e, entries, cast) : [];
+  $("eEchoWrap").hidden = !ec.length; const eb = $("eEchoes"); eb.replaceChildren();
+  ec.forEach(x => {
+    const b = el("button", "echo"); b.type = "button";
+    b.append(el("span", "ed", DMap.fmtDay(x.o.date)), el("span", "et", x.o.title), el("span", "es", "shared: " + x.shared.join(", ")));
+    b.onclick = () => openEntry(x.o); eb.append(b);
+  });
+  // cast suggestions
+  const cs = a ? DMap.castCandidates(e, entries, cast) : [];
+  $("eSuggestWrap").hidden = !cs.length; const sb = $("eSuggest"); sb.replaceChildren();
+  cs.forEach(c => {
+    const row = el("div", "sugg"); const t = el("span"); t.append(el("b", null, c.name), document.createTextNode(c.count > 1 ? " · in " + c.count + " dreams" : (c.relation ? " · " + c.relation : "")));
+    const add = el("button", "btn ghost small", "Add to cast"); add.type = "button";
+    add.onclick = () => { tab("cast"); openEditor(null, { kind: c.kind, name: c.name, relation: c.relation || "", aliases: c.aliases || [] }); };
+    row.append(t, add); sb.append(row);
+  });
+  $("eFilm").textContent = e.result ? "Open the film" : "Make it a film";
+  $("eDelete").textContent = "Delete";
+}
+
+$("eFilm").onclick = () => {
+  const e = entries.find(x => x.id === openId); if (!e) return;
+  filmEntry = e;
+  if (e.result) { openResult(e); return; }
+  $("dream").value = e.dream; castHint();
+  tab("dream"); show("inputCard");
+};
+$("eReanalyse").onclick = () => { const e = entries.find(x => x.id === openId); if (e) analyse(e); };
+$("eDelete").onclick = async () => {
+  if ($("eDelete").textContent === "Delete") { $("eDelete").textContent = "Tap again to delete"; return; }
+  await idb.del("dreams", openId); await idb.del("videos", openId); openId = null;
+  await loadEntries(); tab("journal");
+};
+
+// Journal list
+$("jSearch").addEventListener("input", () => renderJournal());
+function setFilter(items) { jFilter = items; tab("journal"); }
+function entryMatches(e, q, feats) {
+  if (jFilter && !jFilter.every(f => f.ids ? f.ids.includes(e.id) : feats.has(f.key))) return false;
+  if (!q) return true;
+  const hay = [e.title, e.dream, ...[...feats.values()].map(v => v.label)].join(" ").toLowerCase();
+  return q.split(/\s+/).every(w => hay.includes(w));
+}
+function renderJournal() {
+  const list = $("journal"); list.replaceChildren();
+  const fb = $("jFilter"); fb.replaceChildren();
+  if (jFilter) {
+    fb.append(document.createTextNode("Dreams with "));
+    jFilter.forEach((f, i) => { fb.append(el("span", "chip " + f.type, f.label)); if (i < jFilter.length - 1) fb.append(document.createTextNode(" + ")); });
+    const x = el("button", "link", "Clear"); x.onclick = () => { jFilter = null; renderJournal(); }; fb.append(x);
+  }
+  fb.hidden = !jFilter;
+  if (!entries.length) {
+    const e = el("div", "empty"); e.append(el("div", "moon", "☾"), el("p", null, "Your journal is empty."));
+    const row = el("div", "row center"); const w = el("button", "btn small", "Write tonight's dream"); w.onclick = () => tab("write");
+    const x = el("button", "btn ghost small", "Load 14 example dreams"); x.onclick = loadExamples; row.append(w, x); e.append(row); list.append(e); return;
+  }
+  const ci = DMap.castIndex(cast), q = $("jSearch").value.trim().toLowerCase();
+  let month = "", shown = 0;
+  entries.forEach(d => {
+    const feats = DMap.features(d, ci);
+    if (!entryMatches(d, q, feats)) return;
+    const m = new Date(d.date + "T12:00:00").toLocaleDateString(undefined, { month: "long", year: "numeric" });
+    if (m !== month) { month = m; list.append(el("h2", "month", m)); }
+    const b = el("button", "entry"); b.type = "button";
+    const left = el("span", "el"); left.append(el("span", "t", d.title || "Untitled dream"));
+    const tags = el("span", "tags");
+    [...feats.values()].filter(v => v.type !== "emotion").slice(0, 4).forEach(v => tags.append(el("span", "chip sm " + v.type, (v.cast ? "◐ " : "") + v.label)));
+    if (d.status === "pending") tags.append(el("span", "chip sm", "filing…"));
+    left.append(tags);
+    const right = el("span", "d", DMap.fmtDay(d.date));
+    if (d.video && d.video.status === "completed") right.prepend(el("span", "film", "▶ "));
+    if (d.analysis && d.analysis.nightmare) right.prepend(el("span", "nm", "● "));
+    b.append(left, right);
+    b.onclick = () => openEntry(d);
+    list.append(b); shown++;
+  });
+  if (!shown) list.append(el("p", "hint", "No dreams match."));
+}
+
+// Map
+function renderMap() {
+  const has = entries.some(e => e.analysis);
+  $("mapEmpty").hidden = has; $("mapBody").hidden = !has;
+  $("exampleNote").hidden = !entries.some(e => e.example);
+  if (!has) return;
+  DMap.render(entries, cast, {
+    stats: $("mStats"), heat: $("mHeat"), range: $("mRange"), constellation: $("mConst"), threads: $("mThreads"),
+    people: $("mPeople"), places: $("mPlaces"), motifs: $("mMotifs"), weather: $("mWeather"), onPick: setFilter,
+    symbols: $("mSymbols"), archetypes: $("mArch"), observations: $("mObs"), profile,
+  });
+  renderSynthState();
+}
+async function loadExamples() {
+  for (const e of DMap.EXAMPLES) await idb.put("dreams", JSON.parse(JSON.stringify(e)));
+  if (!profile) saveProfile(JSON.parse(JSON.stringify(DMap.EXAMPLE_PROFILE)));
+  await loadEntries(); tab("map");
+}
+$("loadExamples").onclick = loadExamples;
+$("mapWrite").onclick = () => tab("write");
+$("synthBtn").onclick = () => { $("synthMsg").textContent = ""; synthesize(true); };
+$("removeExamples").onclick = async () => {
+  for (const e of entries.filter(x => x.example)) { await idb.del("dreams", e.id); await idb.del("videos", e.id); }
+  if (profile && profile.example) clearProfile();
+  await loadEntries(); renderMap();
+};
 
 // ── Boot ────────────────────────────────────────────────
 (async () => {
   await finishConnect();
   refreshAccount();
   await loadCast();
-  updateJournalCount();
+  loadProfile();
+  await loadEntries();
+  // retry dreams whose filing was interrupted
+  entries.filter(e => e.status === "pending" && Date.now() - e.at > 60000).forEach(e => analyse(e));
   if (apiKey) loadModels(); else { const sel = $("modelSel"); sel.replaceChildren(...FALLBACK_MODELS.map(id => { const o = el("option", null, id); o.value = id; return o; })); updateRenderBox(); }
-  if (location.hash === "#cast") tab("cast");
-  if (location.hash === "#journal") tab("journal");
+  const h = location.hash.slice(1);
+  tab(["journal", "map", "cast"].includes(h) ? h : "write");
+  writeCastHint();
 })();
 })();
