@@ -1,3 +1,218 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Dream Studio · Dreams of Humanity</title>
-<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#06050F;color:#EDEAF8;font:300 16px system-ui,sans-serif;text-align:center;padding:24px}a{color:#9A7FCB}</style></head>
-<body><div><p style="font:italic 2rem Georgia,serif">The studio is opening shortly.</p><p><a href="/">← Back</a></p></div></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Dream Studio · Dreams of Humanity</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500&display=swap">
+<link rel="stylesheet" href="/app/studio.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a href="/" class="brand"><b>◐</b> Dreams of Humanity</a>
+    <button class="acct" id="acctChip" type="button">Not connected</button>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="dream" aria-selected="true">New dream</button>
+    <button role="tab" data-tab="cast" aria-selected="false">Cast <span class="count" id="castCount"></span></button>
+    <button role="tab" data-tab="journal" aria-selected="false">Journal <span class="count" id="journalCount"></span></button>
+  </nav>
+
+  <!-- CONNECT -->
+  <section class="card" id="connectCard" hidden>
+    <div class="label"><span>Step one</span></div>
+    <h2 class="serif">Connect your own account</h2>
+    <p class="muted">Dream Studio runs on your OpenRouter account. You pay the AI models directly and only for what you use: shaping a dream costs about two cents, a 30-second film a few dollars depending on the model. We never see your card and never store your key on our servers.</p>
+    <div class="row"><button class="btn" id="connectBtn">Connect OpenRouter</button></div>
+    <details>
+      <summary>I already have an API key</summary>
+      <div class="stack">
+        <input type="password" id="manualKey" placeholder="sk-or-…" autocomplete="off" aria-label="OpenRouter API key">
+        <div class="row"><button class="btn ghost small" id="manualKeyBtn">Use this key</button></div>
+        <p class="hint">The key stays in this browser and is sent only with your own requests.</p>
+      </div>
+    </details>
+    <p class="hint" id="connectMsg"></p>
+  </section>
+
+  <!-- ACCOUNT -->
+  <section class="card" id="acctCard" hidden>
+    <div class="label"><span>Your account</span><button class="link" id="acctClose">Close</button></div>
+    <p id="acctInfo" class="muted"></p>
+    <div class="row"><button class="btn ghost small" id="disconnectBtn">Disconnect</button></div>
+  </section>
+
+  <!-- ═════ DREAM TAB ═════ -->
+  <div data-view="dream">
+    <section class="intro" id="dreamIntro">
+      <h1>Tell me what you <em>dreamed</em>.</h1>
+      <p class="lede">Write it the way you'd say it half-awake, in any language. Mention your cast by name and they'll look the same in every film.</p>
+    </section>
+
+    <section class="card" id="inputCard">
+      <div class="label"><span>Your dream</span><span id="exampleMark">example, replace with yours</span></div>
+      <textarea id="dream" aria-label="Your dream"></textarea>
+      <div id="castHint" class="cast-hint" hidden></div>
+      <div class="label"><span>How did you see it?</span></div>
+      <div class="seg" role="group" aria-label="Perspective">
+        <button type="button" data-p="mixed" aria-pressed="true">Cinematic</button>
+        <button type="button" data-p="1PP" aria-pressed="false">Through my eyes</button>
+        <button type="button" data-p="3PP" aria-pressed="false">As observer</button>
+      </div>
+      <div class="seg" role="group" aria-label="Format">
+        <button type="button" data-a="9:16" aria-pressed="true">Vertical 9:16</button>
+        <button type="button" data-a="16:9" aria-pressed="false">Wide 16:9</button>
+      </div>
+      <div class="row">
+        <button class="btn" id="shapeBtn">Shape my dream</button>
+        <span class="hint" id="inputHint"></span>
+      </div>
+    </section>
+
+    <section class="card" id="thinkCard" hidden>
+      <div class="status"><span class="orb"></span><span id="thinkText">Reading your dream…</span></div>
+      <div class="row"><button class="btn ghost small" id="stopBtn">Stop</button></div>
+    </section>
+
+    <section class="card" id="clarifyCard" hidden>
+      <div class="label"><span>One question before we film</span></div>
+      <div class="question" id="question"></div>
+      <input type="text" id="answer" aria-label="Your answer" autocomplete="off">
+      <div class="row">
+        <button class="btn" id="answerBtn">Continue</button>
+        <button class="btn ghost small" id="skipBtn">Skip, film it as is</button>
+      </div>
+    </section>
+
+    <section class="card" id="msgCard" hidden>
+      <div class="notice rose" id="msgText"></div>
+      <div class="row"><button class="btn ghost small" id="msgBack">Back</button><button class="btn small" id="retryBtn" hidden>Try again</button></div>
+    </section>
+
+    <section class="card" id="resultCard" hidden>
+      <div class="label"><span>Your film</span><span id="resMeta"></span></div>
+      <h3 class="film-title" id="resTitle"></h3>
+      <p class="summary" id="resSummary"></p>
+      <div class="badges" id="resBadges"></div>
+      <div class="cast-used" id="castUsed" hidden></div>
+
+      <div class="player" id="player" hidden>
+        <video id="video" controls playsinline loop></video>
+        <span class="ai-label">AI-generated · private use</span>
+      </div>
+
+      <div class="timeline" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+      <div class="reel" id="reel"></div>
+
+      <div id="transWrap" hidden>
+        <div class="label"><span>What we changed so it can be filmed</span></div>
+        <ul class="trans" id="trans"></ul>
+      </div>
+
+      <div id="suggestWrap" hidden>
+        <div class="label"><span>Save to your cast?</span></div>
+        <div class="suggest" id="suggest"></div>
+      </div>
+
+      <div id="otherWrap" class="hint" hidden></div>
+
+      <details>
+        <summary>Full video prompt</summary>
+        <pre id="prompt"></pre>
+      </details>
+      <div class="row">
+        <button class="btn ghost small" id="copyBtn">Copy prompt</button>
+        <button class="btn ghost small" id="newBtn">New dream</button>
+        <button class="btn ghost small danger" id="delBtn">Delete</button>
+      </div>
+
+      <!-- RENDER -->
+      <div class="render" id="renderBox">
+        <div class="label"><span>Film it</span><span id="renderEst"></span></div>
+        <div class="grid2">
+          <label class="field"><span>Model</span><select id="modelSel"></select></label>
+          <label class="field"><span>Quality</span>
+            <select id="resSel"><option value="480p">480p · cheapest</option><option value="720p" selected>720p</option><option value="1080p">1080p</option></select>
+          </label>
+        </div>
+        <label class="check" id="declWrap">
+          <input type="checkbox" id="declBox">
+          <span>I'm filming my own dream for private use. I won't publish, distribute or earn money from this film, and I understand it is AI-generated and labelled as such. People from my life appear only as described, never from photos. <a href="/privacy.html" target="_blank" rel="noopener">Details</a></span>
+        </label>
+        <div class="row">
+          <button class="btn" id="renderBtn">Render film</button>
+          <button class="btn ghost small" id="softBtn" hidden>Try the gentler version</button>
+        </div>
+        <div class="status" id="renderStatus" hidden><span class="orb"></span><span id="renderText"></span></div>
+        <p class="hint" id="renderMsg"></p>
+      </div>
+    </section>
+  </div>
+
+  <!-- ═════ CAST TAB ═════ -->
+  <div data-view="cast" hidden>
+    <section class="intro">
+      <h1>Your <em>cast</em>.</h1>
+      <p class="lede">People and places that keep coming back. Describe them once and they look the same in every film. Mention them in a dream by name or by any word you use for them.</p>
+    </section>
+    <div class="row">
+      <button class="btn" id="addPerson">Add a person</button>
+      <button class="btn ghost" id="addPlace">Add a place</button>
+    </div>
+
+    <section class="card" id="castEditor" hidden>
+      <div class="label"><span id="edTitle">New person</span><button class="link" id="edClose">Close</button></div>
+      <div class="seg" role="group" aria-label="Kind">
+        <button type="button" data-k="person" aria-pressed="true">Person</button>
+        <button type="button" data-k="place" aria-pressed="false">Place</button>
+      </div>
+      <div class="grid2">
+        <label class="field"><span>Name</span><input type="text" id="edName" placeholder="Babcia"></label>
+        <label class="field"><span id="edRelLabel">Who are they to you?</span><input type="text" id="edRel" placeholder="my grandmother"></label>
+      </div>
+      <label class="field"><span>Other words you use for them</span><input type="text" id="edAliases" placeholder="babci, babunia, grandma"></label>
+      <label class="field"><span>What they look like (your words, any language)</span><textarea id="edNotes" rows="3" placeholder="Short grey hair, round glasses, always a blue apron with flowers…"></textarea></label>
+
+      <div class="photo">
+        <label class="photo-drop" id="photoDrop">
+          <input type="file" id="edPhoto" accept="image/png,image/jpeg,image/webp" hidden>
+          <img id="edPhotoPrev" alt="" hidden>
+          <span id="photoText">Add a photo (optional)</span>
+        </label>
+        <p class="hint">The photo only helps us write the description below. It is not saved and never goes to the video model, which does not accept real faces.</p>
+      </div>
+
+      <div class="row">
+        <button class="btn ghost small" id="edWrite">Write the description</button>
+        <span class="hint" id="edWriteMsg"></span>
+      </div>
+      <label class="field"><span>Locked description · used word for word in every film</span>
+        <textarea id="edLocked" rows="5" placeholder="Written for you in English from your notes or photo. You can edit it."></textarea>
+      </label>
+      <div class="row">
+        <button class="btn" id="edSave">Save to cast</button>
+        <button class="btn ghost small danger" id="edDelete" hidden>Remove</button>
+      </div>
+    </section>
+
+    <div class="cast-list" id="castList"></div>
+  </div>
+
+  <!-- ═════ JOURNAL TAB ═════ -->
+  <div data-view="journal" hidden>
+    <section class="intro">
+      <h1>Dream <em>journal</em>.</h1>
+      <p class="lede">Everything here lives only in this browser. Nothing is published.</p>
+    </section>
+    <div class="journal" id="journal"></div>
+  </div>
+
+  <footer>AI-generated films · private use · your journal stays on this device</footer>
+</div>
+<script src="/app/studio.js"></script>
+</body>
+</html>
