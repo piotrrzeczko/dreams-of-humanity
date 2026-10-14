@@ -1,0 +1,22 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "dreams-of-humanity",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page",
+    "run_worker_first": ["/api/*"]
+  },
+  "rules": [{ "type": "Text", "globs": ["**/*.md"], "fallthrough": true }],
+  "d1_databases": [
+    { "binding": "DB", "database_name": "dreams-of-humanity", "database_id": "3c3b1a87-1839-4058-9232-552e3406d6f2" }
+  ],
+  "vars": {
+    "PROCESSOR_MODELS": "anthropic/claude-sonnet-5.5,anthropic/claude-sonnet-5,anthropic/claude-sonnet-4.5",
+    "APP_NAME": "Dreams of Humanity"
+  },
+  "observability": { "enabled": true }
+}
