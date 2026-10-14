@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Dreams of Humanity — Where sleep becomes cinema</title>
-<meta name="description" content="Describe your dream. We shape it into a 30-second film, with the people and places that keep coming back.">
+<title>Dreams of Humanity — A journal that remembers your dreams</title>
+<meta name="description" content="Write down each dream. Over weeks it becomes a map of the people, places and stories that keep returning, and the dreams you share with all of humanity. Then, if you want, a film.">
 <meta name="theme-color" content="#06050F">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,12 +20,12 @@
   <div class="nav-in">
     <a href="/" class="brand"><span class="brand-mark">◐</span> Dreams of Humanity</a>
     <nav class="nav-links" aria-label="Main">
-      <a href="#film">From words to film</a>
-      <a href="#cast">Your cast</a>
-      <a href="#acts">Four acts</a>
-      <a href="#price">Price</a>
+      <a href="#journal">Journal</a>
+      <a href="#map">Your map</a>
+      <a href="#shared">Shared dreams</a>
+      <a href="#film">Films</a>
     </nav>
-    <a href="/app/" class="btn btn-sm"><span class="lg">Start dreaming</span><span class="sm">Start</span></a>
+    <a href="/app/" class="btn btn-sm"><span class="lg">Start your journal</span><span class="sm">Start</span></a>
   </div>
 </header>
 
@@ -35,23 +35,158 @@
 <section class="hero" id="top">
   <div class="hero-in">
     <p class="kicker reveal"><span class="dot"></span>Private preview</p>
-    <h1 class="hero-title reveal">Where sleep<br>becomes <em>cinema</em></h1>
-    <p class="hero-sub reveal">Tell us your dream the way you remember it, half-awake and in any language. We shape it into a thirty-second film with the people and places that keep coming back.</p>
+    <h1 class="hero-title reveal">A journal that<br><em>remembers</em> your dreams</h1>
+    <p class="hero-sub reveal">Write down what you dreamt, half-awake and in any language. Night by night it becomes a map of the people, places and stories that keep coming back, and of the dreams you share with the rest of humanity.</p>
     <div class="hero-cta reveal">
-      <a href="/app/" class="btn">Shape your first dream <span aria-hidden="true">→</span></a>
-      <a href="#waitlist" class="btn btn-ghost">Join early access</a>
+      <a href="/app/#write" class="btn">Write tonight's dream <span aria-hidden="true">→</span></a>
+      <a href="/app/#examples" class="btn btn-ghost">See an example map</a>
     </div>
   </div>
-  <a href="#film" class="scroll-cue" aria-label="Scroll down"><span></span></a>
-  <p class="hero-foot">Your journal stays on your device <i>·</i> Every film labelled as AI <i>·</i> Nothing is published</p>
+  <a href="#journal" class="scroll-cue" aria-label="Scroll down"><span></span></a>
+  <p class="hero-foot">Your journal stays on your device <i>·</i> We describe patterns, never diagnose <i>·</i> Nothing is published</p>
+</section>
+
+<!-- ═══ JOURNAL ═══ -->
+<section class="sec journal" id="journal">
+  <div class="wrap j-grid">
+    <div class="j-text reveal">
+      <p class="eyebrow">Each morning, one entry</p>
+      <h2 class="sec-title">You write.<br><em>It files.</em></h2>
+      <p class="body">A sentence is enough. Seconds later the dream is labelled: who was there, where it happened, the symbols and events, the feelings and how strong they were. You never fill in a form.</p>
+      <ul class="ticks">
+        <li>Write the way you think: “babcia”, “mój stary blok”, “ten w kapturze”.</li>
+        <li>People you have dreamt before are recognised as the same person.</li>
+        <li>Each new dream shows its echoes: earlier nights that share something with it.</li>
+      </ul>
+    </div>
+    <article class="page reveal" aria-label="Example journal entry">
+      <p class="pd">Monday, 6 October</p>
+      <p class="pt">“Babcia w kuchni w końcu się odwróciła i powiedziała: usiądź, zaraz będzie. Obudziłem się ze ściśniętym gardłem.”</p>
+      <div class="filed">
+        <p class="ft">Babcia mówi</p>
+        <div class="lfacets">
+          <div class="lf"><span class="fl">People</span><span class="chips"><span class="chip person">babcia</span></span></div>
+          <div class="lf"><span class="fl">Place</span><span class="chips"><span class="chip place">kuchnia babci</span></span></div>
+          <div class="lf"><span class="fl">Symbols</span><span class="chips"><span class="chip symbol">placki</span><span class="chip symbol">stół</span></span></div>
+          <div class="lf"><span class="fl">Happens</span><span class="chips"><span class="chip event">babcia się odwraca i mówi</span></span></div>
+          <div class="lf"><span class="fl">Feelings</span><span class="chips"><span class="chip emotion">longing •••••</span><span class="chip emotion">relief •••</span></span></div>
+          <div class="lf shared"><span class="fl">Shared with humanity</span><span class="chips"><span class="chip archetype">The dead return</span><span class="chip archetype">The Great Mother</span></span></div>
+          <div class="lf"><span class="fl">Part of</span><span class="chips"><span class="chip story">Kuchnia babci · 3rd dream</span></span></div>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- ═══ MAP ═══ -->
+<section class="sec lmap" id="map">
+  <div class="wrap">
+    <header class="sec-head reveal">
+      <p class="eyebrow">Weeks become a map</p>
+      <h2 class="sec-title">The more you dream,<br>the more <em>it sees</em>.</h2>
+      <p class="body lead">Every few nights the whole journal is read again. Variants of the same person are merged, recurring storylines get a name, and quiet patterns surface: who returns, where, and how it changes over months. Below is a real map built from fourteen example nights.</p>
+    </header>
+    <div class="map-grid">
+      <div class="mcard reveal const-card">
+        <p class="mlabel"><span>Constellation</span><span>who and what appears together</span></p>
+        <svg id="lConst" viewBox="0 0 600 460" role="img" aria-label="Example constellation of recurring people, places and symbols"></svg>
+      </div>
+      <div class="mcard reveal">
+        <p class="mlabel"><span>Threads</span><span>named from the whole journal</span></p>
+        <div class="threads" id="lThreads"></div>
+      </div>
+      <div class="mcard reveal heat-card">
+        <p class="mlabel"><span>Nights</span><span>like commits, one square per night</span></p>
+        <div class="heat-wrap"><svg id="lHeat" role="img" aria-label="Example nights recorded, by week"></svg></div>
+      </div>
+      <div class="mcard reveal">
+        <p class="mlabel"><span>What the journal shows</span></p>
+        <ul class="obs" id="lObs"></ul>
+      </div>
+    </div>
+    <p class="reel-note reveal"><a href="/app/#examples" class="btn btn-ghost">Open the full example map <span aria-hidden="true">→</span></a></p>
+  </div>
+</section>
+
+<!-- ═══ GALLERY ═══ -->
+<section class="sec gallery" id="shared">
+  <div class="wrap">
+    <header class="sec-head reveal">
+      <p class="eyebrow">Shared with humanity</p>
+      <h2 class="sec-title">Some of your dreams are<br><em>thousands of years old</em>.</h2>
+      <p class="body lead">Falling, being chased, the exam you never studied for, someone you lost sitting at the table. People everywhere report the same dreams, and Jung saw the same figures in them: the Shadow, the Wise Elder, the Great Mother. Your journal recognises 17 of these themes and 6 figures, and shows which ones you carry. It names the pattern. It never tells you what it means.</p>
+    </header>
+  </div>
+  <div class="reel-row" id="reel">
+    <figure class="frame reveal">
+      <svg viewBox="0 0 400 520" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d0b1e"/><stop offset="1" stop-color="#7b5ea7"/></linearGradient></defs><rect width="400" height="520" fill="url(#g1)"/><g fill="#06050f" opacity=".9"><rect x="60" y="60" width="280" height="26"/><rect x="90" y="120" width="220" height="22"/><rect x="118" y="172" width="164" height="18"/><rect x="142" y="216" width="116" height="15"/><rect x="162" y="252" width="76" height="12"/><rect x="176" y="282" width="48" height="9"/><rect x="186" y="304" width="28" height="7"/></g><circle cx="200" cy="420" r="90" fill="#c4687a" opacity=".25"/></svg>
+      <figcaption><span class="theme">Falling</span>“The staircase kept descending. Each step I took, three more appeared below me.”</figcaption>
+    </figure>
+    <figure class="frame reveal">
+      <svg viewBox="0 0 400 520" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="g2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1e1b3a"/><stop offset=".6" stop-color="#c4687a"/><stop offset="1" stop-color="#d4924a"/></linearGradient></defs><rect width="400" height="520" fill="url(#g2)"/><circle cx="300" cy="110" r="34" fill="#f9f8ff" opacity=".8"/><path d="M0 520 V420 h30 v-40 h24 v60 h20 v-90 h30 v70 h26 v-30 h22 v50 h18 v-110 h34 v90 h20 v-50 h28 v70 h22 v-80 h30 v60 h24 v-40 h22 v100 h50 V520Z" fill="#06050f"/><path d="M150 200 l14 -6 l14 6 l-14 -2z" fill="#06050f"/></svg>
+      <figcaption><span class="theme">Flying</span>“I was flying above the city I grew up in, but the streets were arranged differently.”</figcaption>
+    </figure>
+    <figure class="frame reveal">
+      <svg viewBox="0 0 400 520" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="400" height="520" fill="#0d0b1e"/><g fill="none" stroke="#9a7fcb"><rect x="20" y="20" width="360" height="480" stroke-opacity=".5"/><rect x="80" y="90" width="240" height="340" stroke-opacity=".45"/><rect x="125" y="145" width="150" height="230" stroke-opacity=".4"/><rect x="155" y="185" width="90" height="150" stroke-opacity=".35"/><rect x="175" y="212" width="50" height="96" stroke-opacity=".3"/></g><rect x="185" y="226" width="30" height="82" fill="#c4687a" opacity=".55"/><path d="M196 300 v-26 a4 4 0 0 1 8 0 v26z M200 266 a5 5 0 1 0 0.1 0z" fill="#06050f"/></svg>
+      <figcaption><span class="theme">Being chased</span>“She was at the end of every corridor. Always the same distance away.”</figcaption>
+    </figure>
+    <figure class="frame reveal">
+      <svg viewBox="0 0 400 520" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="g4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2e2b52"/><stop offset=".48" stop-color="#8b8bad"/><stop offset=".5" stop-color="#13112a"/><stop offset="1" stop-color="#06050f"/></linearGradient></defs><rect width="400" height="520" fill="url(#g4)"/><ellipse cx="200" cy="370" rx="150" ry="40" fill="#06050f" opacity=".8"/><line x1="0" y1="260" x2="400" y2="260" stroke="#f9f8ff" stroke-opacity=".5"/><path d="M196 258 v-30 a4 4 0 0 1 8 0 v30z M200 220 a5 5 0 1 0 .1 0z" fill="#06050f"/></svg>
+      <figcaption><span class="theme">Water</span>“The ocean was perfectly still, and something enormous was just beneath the surface.”</figcaption>
+    </figure>
+    <figure class="frame reveal">
+      <svg viewBox="0 0 400 520" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><radialGradient id="g5" cx=".7" cy=".3" r=".8"><stop offset="0" stop-color="#d4924a"/><stop offset=".5" stop-color="#4a2c3a"/><stop offset="1" stop-color="#06050f"/></radialGradient></defs><rect width="400" height="520" fill="url(#g5)"/><rect x="230" y="70" width="110" height="150" fill="#ffd59a" opacity=".7"/><rect x="60" y="330" width="280" height="14" fill="#06050f"/><rect x="80" y="344" width="10" height="130" fill="#06050f"/><rect x="310" y="344" width="10" height="130" fill="#06050f"/><path d="M150 330 c0-50 6-90 30-100 c6-24 34-24 40 0 c24 10 30 50 30 100z" fill="#06050f" opacity=".85"/><circle cx="200" cy="214" r="18" fill="#06050f" opacity=".85"/></svg>
+      <figcaption><span class="theme">Someone we lost</span>“My grandmother was sitting at the table. She didn't seem to know she had died.”</figcaption>
+    </figure>
+    <figure class="frame reveal">
+      <svg viewBox="0 0 400 520" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="g6" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#13112a"/><stop offset="1" stop-color="#1e1b3a"/></linearGradient><linearGradient id="g6l" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f9f8ff" stop-opacity=".55"/><stop offset="1" stop-color="#9a7fcb" stop-opacity="0"/></linearGradient></defs><rect width="400" height="520" fill="url(#g6)"/><rect x="160" y="150" width="80" height="200" fill="#f9f8ff" opacity=".9"/><polygon points="160,350 240,350 380,520 20,520" fill="url(#g6l)"/><rect x="152" y="142" width="96" height="208" fill="none" stroke="#2e2b52" stroke-width="8"/></svg>
+      <figcaption><span class="theme">The hidden room</span>“I opened a door in my childhood home that had never existed.”</figcaption>
+    </figure>
+    <figure class="frame reveal">
+      <svg viewBox="0 0 400 520" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="g7" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1e3a3a"/><stop offset="1" stop-color="#0d0b1e"/></linearGradient></defs><rect width="400" height="520" fill="url(#g7)"/><rect x="40" y="60" width="320" height="140" fill="#13112a" stroke="#3d8b8f" stroke-opacity=".5"/><g transform="rotate(-8 200 380)"><rect x="110" y="300" width="180" height="230" fill="#edeaf8"/><g stroke="#c4c3d8" stroke-width="3"><line x1="130" y1="340" x2="270" y2="340"/><line x1="130" y1="370" x2="230" y2="370"/></g></g></svg>
+      <figcaption><span class="theme">The exam</span>“The paper was blank. I didn't know what subject it was.”</figcaption>
+    </figure>
+    <figure class="frame reveal">
+      <svg viewBox="0 0 400 520" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="g8" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2e2b52"/><stop offset=".55" stop-color="#3d8b8f"/><stop offset="1" stop-color="#0d0b1e"/></linearGradient></defs><rect width="400" height="520" fill="#13112a"/><rect y="280" width="400" height="240" fill="url(#g8)" opacity=".85"/><path d="M0 280 q50 -8 100 0 t100 0 t100 0 t100 0" stroke="#f9f8ff" stroke-opacity=".5" fill="none"/><g fill="#06050f" transform="rotate(12 220 260)"><rect x="190" y="230" width="60" height="8"/><rect x="190" y="180" width="8" height="58"/><rect x="194" y="238" width="6" height="40"/><rect x="242" y="238" width="6" height="40"/></g><rect x="40" y="60" width="90" height="120" fill="#d4924a" opacity=".4"/></svg>
+      <figcaption><span class="theme">The flood</span>“The water came slowly. There was time to move, but no urgency.”</figcaption>
+    </figure>
+  </div>
+  <p class="wrap reel-note">Example dreams. Imagined frames; real films arrive with early access.</p>
+</section>
+
+<!-- ═══ CAST ═══ -->
+<section class="sec cast" id="cast">
+  <div class="wrap cast-grid">
+    <div class="cast-text reveal">
+      <p class="eyebrow">Your cast</p>
+      <h2 class="sec-title">Describe her once.<br><em>Recognise her</em> every time.</h2>
+      <p class="body">Your dreams have a recurring cast: a grandmother, a house by the lake, a stranger in the corridor. The journal notices them and asks if they belong in your cast. Save them once, in your own words or from a photo, and they stay the same person on your map and keep the same face in every film.</p>
+      <ul class="ticks">
+        <li>Mention them however you speak: “babcia”, “babci”, “babunia”.</li>
+        <li>A photo only helps us write the description. We never keep it, and it never goes to the video model.</li>
+        <li>After each dream we suggest who keeps coming back.</li>
+      </ul>
+    </div>
+    <div class="cast-visual reveal">
+      <article class="persona">
+        <header><span class="avatar">B</span><div><b>Babcia</b><small>grandmother · in 7 dreams</small></div></header>
+        <p class="locked"><span>Locked description</span>Woman in her late seventies, small and round, soft oval face, fair wrinkled skin, short silver curls, kind grey eyes behind round wire glasses, navy apron with small white flowers over a beige cardigan.</p>
+      </article>
+      <div class="cast-frames">
+        <figure><svg viewBox="0 0 120 160" aria-hidden="true"><rect width="120" height="160" fill="#4a2c3a"/><circle cx="90" cy="30" r="40" fill="#d4924a" opacity=".5"/><path d="M38 160 c0-40 6-62 22-68 c4-16 22-16 26 0 c16 6 22 28 22 68z" fill="#0b0816"/><circle cx="60" cy="80" r="12" fill="#0b0816"/><path d="M50 78 c3-9 17-9 20 0" stroke="#c4c3d8" stroke-width="3" fill="none"/><rect x="46" y="104" width="30" height="56" fill="#1e3a6b" opacity=".7"/></svg><figcaption>March · the kitchen</figcaption></figure>
+        <figure><svg viewBox="0 0 120 160" aria-hidden="true"><rect width="120" height="160" fill="#1e3a3a"/><rect y="110" width="120" height="50" fill="#3d8b8f" opacity=".6"/><path d="M38 160 c0-40 6-62 22-68 c4-16 22-16 26 0 c16 6 22 28 22 68z" fill="#0b0816"/><circle cx="60" cy="80" r="12" fill="#0b0816"/><path d="M50 78 c3-9 17-9 20 0" stroke="#c4c3d8" stroke-width="3" fill="none"/><rect x="46" y="104" width="30" height="56" fill="#1e3a6b" opacity=".7"/></svg><figcaption>June · by the lake</figcaption></figure>
+        <figure><svg viewBox="0 0 120 160" aria-hidden="true"><rect width="120" height="160" fill="#1e1b3a"/><rect x="20" y="20" width="80" height="120" fill="none" stroke="#9a7fcb" stroke-opacity=".4"/><path d="M38 160 c0-40 6-62 22-68 c4-16 22-16 26 0 c16 6 22 28 22 68z" fill="#0b0816"/><circle cx="60" cy="80" r="12" fill="#0b0816"/><path d="M50 78 c3-9 17-9 20 0" stroke="#c4c3d8" stroke-width="3" fill="none"/><rect x="46" y="104" width="30" height="56" fill="#1e3a6b" opacity=".7"/></svg><figcaption>October · the corridor</figcaption></figure>
+      </div>
+    </div>
+  </div>
 </section>
 
 <!-- ═══ DEMO ═══ -->
 <section class="sec demo" id="film">
   <div class="wrap">
     <header class="sec-head reveal">
-      <p class="eyebrow">From words to film</p>
-      <h2 class="sec-title">One sentence you woke up with.<br><em>Four shots</em> that bring it back.</h2>
+      <p class="eyebrow">Then, if you want: a film</p>
+      <h2 class="sec-title">Some dreams deserve<br><em>to be seen</em>.</h2>
     </header>
 
     <div class="demo-grid">
@@ -133,78 +268,6 @@
   </div>
 </section>
 
-<!-- ═══ GALLERY ═══ -->
-<section class="sec gallery">
-  <div class="wrap">
-    <header class="sec-head reveal">
-      <p class="eyebrow">Dreams almost everyone has</p>
-      <h2 class="sec-title">Which one was <em>yours</em>?</h2>
-    </header>
-  </div>
-  <div class="reel-row" id="reel">
-    <figure class="frame reveal">
-      <svg viewBox="0 0 400 520" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d0b1e"/><stop offset="1" stop-color="#7b5ea7"/></linearGradient></defs><rect width="400" height="520" fill="url(#g1)"/><g fill="#06050f" opacity=".9"><rect x="60" y="60" width="280" height="26"/><rect x="90" y="120" width="220" height="22"/><rect x="118" y="172" width="164" height="18"/><rect x="142" y="216" width="116" height="15"/><rect x="162" y="252" width="76" height="12"/><rect x="176" y="282" width="48" height="9"/><rect x="186" y="304" width="28" height="7"/></g><circle cx="200" cy="420" r="90" fill="#c4687a" opacity=".25"/></svg>
-      <figcaption><span class="theme">Falling</span>“The staircase kept descending. Each step I took, three more appeared below me.”</figcaption>
-    </figure>
-    <figure class="frame reveal">
-      <svg viewBox="0 0 400 520" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="g2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1e1b3a"/><stop offset=".6" stop-color="#c4687a"/><stop offset="1" stop-color="#d4924a"/></linearGradient></defs><rect width="400" height="520" fill="url(#g2)"/><circle cx="300" cy="110" r="34" fill="#f9f8ff" opacity=".8"/><path d="M0 520 V420 h30 v-40 h24 v60 h20 v-90 h30 v70 h26 v-30 h22 v50 h18 v-110 h34 v90 h20 v-50 h28 v70 h22 v-80 h30 v60 h24 v-40 h22 v100 h50 V520Z" fill="#06050f"/><path d="M150 200 l14 -6 l14 6 l-14 -2z" fill="#06050f"/></svg>
-      <figcaption><span class="theme">Flying</span>“I was flying above the city I grew up in, but the streets were arranged differently.”</figcaption>
-    </figure>
-    <figure class="frame reveal">
-      <svg viewBox="0 0 400 520" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="400" height="520" fill="#0d0b1e"/><g fill="none" stroke="#9a7fcb"><rect x="20" y="20" width="360" height="480" stroke-opacity=".5"/><rect x="80" y="90" width="240" height="340" stroke-opacity=".45"/><rect x="125" y="145" width="150" height="230" stroke-opacity=".4"/><rect x="155" y="185" width="90" height="150" stroke-opacity=".35"/><rect x="175" y="212" width="50" height="96" stroke-opacity=".3"/></g><rect x="185" y="226" width="30" height="82" fill="#c4687a" opacity=".55"/><path d="M196 300 v-26 a4 4 0 0 1 8 0 v26z M200 266 a5 5 0 1 0 0.1 0z" fill="#06050f"/></svg>
-      <figcaption><span class="theme">Being chased</span>“She was at the end of every corridor. Always the same distance away.”</figcaption>
-    </figure>
-    <figure class="frame reveal">
-      <svg viewBox="0 0 400 520" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="g4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2e2b52"/><stop offset=".48" stop-color="#8b8bad"/><stop offset=".5" stop-color="#13112a"/><stop offset="1" stop-color="#06050f"/></linearGradient></defs><rect width="400" height="520" fill="url(#g4)"/><ellipse cx="200" cy="370" rx="150" ry="40" fill="#06050f" opacity=".8"/><line x1="0" y1="260" x2="400" y2="260" stroke="#f9f8ff" stroke-opacity=".5"/><path d="M196 258 v-30 a4 4 0 0 1 8 0 v30z M200 220 a5 5 0 1 0 .1 0z" fill="#06050f"/></svg>
-      <figcaption><span class="theme">Water</span>“The ocean was perfectly still, and something enormous was just beneath the surface.”</figcaption>
-    </figure>
-    <figure class="frame reveal">
-      <svg viewBox="0 0 400 520" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><radialGradient id="g5" cx=".7" cy=".3" r=".8"><stop offset="0" stop-color="#d4924a"/><stop offset=".5" stop-color="#4a2c3a"/><stop offset="1" stop-color="#06050f"/></radialGradient></defs><rect width="400" height="520" fill="url(#g5)"/><rect x="230" y="70" width="110" height="150" fill="#ffd59a" opacity=".7"/><rect x="60" y="330" width="280" height="14" fill="#06050f"/><rect x="80" y="344" width="10" height="130" fill="#06050f"/><rect x="310" y="344" width="10" height="130" fill="#06050f"/><path d="M150 330 c0-50 6-90 30-100 c6-24 34-24 40 0 c24 10 30 50 30 100z" fill="#06050f" opacity=".85"/><circle cx="200" cy="214" r="18" fill="#06050f" opacity=".85"/></svg>
-      <figcaption><span class="theme">Someone we lost</span>“My grandmother was sitting at the table. She didn't seem to know she had died.”</figcaption>
-    </figure>
-    <figure class="frame reveal">
-      <svg viewBox="0 0 400 520" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="g6" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#13112a"/><stop offset="1" stop-color="#1e1b3a"/></linearGradient><linearGradient id="g6l" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f9f8ff" stop-opacity=".55"/><stop offset="1" stop-color="#9a7fcb" stop-opacity="0"/></linearGradient></defs><rect width="400" height="520" fill="url(#g6)"/><rect x="160" y="150" width="80" height="200" fill="#f9f8ff" opacity=".9"/><polygon points="160,350 240,350 380,520 20,520" fill="url(#g6l)"/><rect x="152" y="142" width="96" height="208" fill="none" stroke="#2e2b52" stroke-width="8"/></svg>
-      <figcaption><span class="theme">The hidden room</span>“I opened a door in my childhood home that had never existed.”</figcaption>
-    </figure>
-    <figure class="frame reveal">
-      <svg viewBox="0 0 400 520" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="g7" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1e3a3a"/><stop offset="1" stop-color="#0d0b1e"/></linearGradient></defs><rect width="400" height="520" fill="url(#g7)"/><rect x="40" y="60" width="320" height="140" fill="#13112a" stroke="#3d8b8f" stroke-opacity=".5"/><g transform="rotate(-8 200 380)"><rect x="110" y="300" width="180" height="230" fill="#edeaf8"/><g stroke="#c4c3d8" stroke-width="3"><line x1="130" y1="340" x2="270" y2="340"/><line x1="130" y1="370" x2="230" y2="370"/></g></g></svg>
-      <figcaption><span class="theme">The exam</span>“The paper was blank. I didn't know what subject it was.”</figcaption>
-    </figure>
-    <figure class="frame reveal">
-      <svg viewBox="0 0 400 520" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="g8" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2e2b52"/><stop offset=".55" stop-color="#3d8b8f"/><stop offset="1" stop-color="#0d0b1e"/></linearGradient></defs><rect width="400" height="520" fill="#13112a"/><rect y="280" width="400" height="240" fill="url(#g8)" opacity=".85"/><path d="M0 280 q50 -8 100 0 t100 0 t100 0 t100 0" stroke="#f9f8ff" stroke-opacity=".5" fill="none"/><g fill="#06050f" transform="rotate(12 220 260)"><rect x="190" y="230" width="60" height="8"/><rect x="190" y="180" width="8" height="58"/><rect x="194" y="238" width="6" height="40"/><rect x="242" y="238" width="6" height="40"/></g><rect x="40" y="60" width="90" height="120" fill="#d4924a" opacity=".4"/></svg>
-      <figcaption><span class="theme">The flood</span>“The water came slowly. There was time to move, but no urgency.”</figcaption>
-    </figure>
-  </div>
-  <p class="wrap reel-note">Example dreams. Real films arrive with early access.</p>
-</section>
-
-<!-- ═══ CAST ═══ -->
-<section class="sec cast" id="cast">
-  <div class="wrap cast-grid">
-    <div class="cast-text reveal">
-      <p class="eyebrow">Your cast</p>
-      <h2 class="sec-title">Describe her once.<br><em>Recognise her</em> every time.</h2>
-      <p class="body">Your dreams have a recurring cast: a grandmother, a house by the lake, a stranger in the corridor. Save them once, in your own words or from a photo, and they keep the same face, hair and clothes in every film you make.</p>
-      <ul class="ticks">
-        <li>Mention them however you speak: “babcia”, “babci”, “babunia”.</li>
-        <li>A photo only helps us write the description. We never keep it, and it never goes to the video model.</li>
-        <li>After each dream we suggest who might belong in your cast.</li>
-      </ul>
-    </div>
-    <div class="cast-visual reveal">
-      <article class="persona">
-        <header><span class="avatar">B</span><div><b>Babcia</b><small>grandmother · in 7 dreams</small></div></header>
-        <p class="locked"><span>Locked description</span>Woman in her late seventies, small and round, soft oval face, fair wrinkled skin, short silver curls, kind grey eyes behind round wire glasses, navy apron with small white flowers over a beige cardigan.</p>
-      </article>
-      <div class="cast-frames">
-        <figure><svg viewBox="0 0 120 160" aria-hidden="true"><rect width="120" height="160" fill="#4a2c3a"/><circle cx="90" cy="30" r="40" fill="#d4924a" opacity=".5"/><path d="M38 160 c0-40 6-62 22-68 c4-16 22-16 26 0 c16 6 22 28 22 68z" fill="#0b0816"/><circle cx="60" cy="80" r="12" fill="#0b0816"/><path d="M50 78 c3-9 17-9 20 0" stroke="#c4c3d8" stroke-width="3" fill="none"/><rect x="46" y="104" width="30" height="56" fill="#1e3a6b" opacity=".7"/></svg><figcaption>March · the kitchen</figcaption></figure>
-        <figure><svg viewBox="0 0 120 160" aria-hidden="true"><rect width="120" height="160" fill="#1e3a3a"/><rect y="110" width="120" height="50" fill="#3d8b8f" opacity=".6"/><path d="M38 160 c0-40 6-62 22-68 c4-16 22-16 26 0 c16 6 22 28 22 68z" fill="#0b0816"/><circle cx="60" cy="80" r="12" fill="#0b0816"/><path d="M50 78 c3-9 17-9 20 0" stroke="#c4c3d8" stroke-width="3" fill="none"/><rect x="46" y="104" width="30" height="56" fill="#1e3a6b" opacity=".7"/></svg><figcaption>June · by the lake</figcaption></figure>
-        <figure><svg viewBox="0 0 120 160" aria-hidden="true"><rect width="120" height="160" fill="#1e1b3a"/><rect x="20" y="20" width="80" height="120" fill="none" stroke="#9a7fcb" stroke-opacity=".4"/><path d="M38 160 c0-40 6-62 22-68 c4-16 22-16 26 0 c16 6 22 28 22 68z" fill="#0b0816"/><circle cx="60" cy="80" r="12" fill="#0b0816"/><path d="M50 78 c3-9 17-9 20 0" stroke="#c4c3d8" stroke-width="3" fill="none"/><rect x="46" y="104" width="30" height="56" fill="#1e3a6b" opacity=".7"/></svg><figcaption>October · the corridor</figcaption></figure>
-      </div>
-    </div>
-  </div>
-</section>
-
 <!-- ═══ FOUR ACTS ═══ -->
 <section class="sec acts" id="acts">
   <div class="wrap">
@@ -227,15 +290,15 @@
   <div class="wrap">
     <header class="sec-head reveal">
       <p class="eyebrow">Honest pricing</p>
-      <h2 class="sec-title">You pay the film studio,<br><em>not us</em>.</h2>
-      <p class="body lead">Dream Studio runs on your own OpenRouter account. Shaping dreams and building your cast costs cents. You pay the video model directly, only for the films you choose to make.</p>
+      <h2 class="sec-title">The journal is on us.<br>Films, <em>at cost</em>.</h2>
+      <p class="body lead">Writing, filing and your map are free during the preview. When you want a film, you connect your own OpenRouter account and pay the video model directly, only for the films you choose to make. We add nothing on top.</p>
     </header>
     <div class="price-grid">
-      <div class="tier reveal"><p class="amt">≈ $0.02</p><p class="what">Shape a dream</p><p class="det">Four shots, one gentle question, your cast in place.</p></div>
-      <div class="tier reveal"><p class="amt">≈ $3</p><p class="what">30-second film, 480p</p><p class="det">Seedance 2.5, with sound. Good for your journal.</p></div>
-      <div class="tier reveal hl"><p class="amt">≈ $7</p><p class="what">30-second film, 720p</p><p class="det">Seedance 2.5, with sound. The one you'll rewatch.</p></div>
+      <div class="tier reveal hl"><p class="amt">Free</p><p class="what">Dream journal &amp; map</p><p class="det">Every entry labelled, threads named, shared dreams recognised.</p></div>
+      <div class="tier reveal"><p class="amt">≈ $3</p><p class="what">30-second film, 480p</p><p class="det">Seedance 2.5, with sound, your cast in place.</p></div>
+      <div class="tier reveal"><p class="amt">≈ $7</p><p class="what">30-second film, 720p</p><p class="det">Seedance 2.5, with sound. The one you'll rewatch.</p></div>
     </div>
-    <p class="fine reveal">Approximate prices at OpenRouter rates, October 2026. You confirm private use before your first film.</p>
+    <p class="fine reveal">Film prices are approximate OpenRouter rates, October 2026. You confirm private use before your first film.</p>
   </div>
 </section>
 
@@ -243,7 +306,7 @@
 <section class="sec waitlist" id="waitlist">
   <div class="wrap narrow reveal">
     <p class="eyebrow">Early access</p>
-    <h2 class="sec-title">Be among the first<br>to <em>watch your dreams</em></h2>
+    <h2 class="sec-title">Be among the first<br>to <em>map your dreams</em></h2>
     <form class="wl" id="wlForm" novalidate>
       <input type="email" id="wlEmail" placeholder="you@example.com" autocomplete="email" required aria-label="Email">
       <button type="submit" class="btn">Join</button>
@@ -257,11 +320,12 @@
 <footer class="foot">
   <div class="wrap foot-in">
     <p class="brand"><span class="brand-mark">◐</span> Dreams of Humanity</p>
-    <nav aria-label="Footer"><a href="/app/">Studio</a><a href="#acts">Four acts</a><a href="/privacy.html">Privacy &amp; private use</a></nav>
-    <p class="fine">© 2026 Dreams of Humanity · Every film is AI-generated</p>
+    <nav aria-label="Footer"><a href="/app/">Journal</a><a href="#shared">Shared dreams</a><a href="#acts">Four acts</a><a href="/privacy.html">Privacy &amp; private use</a></nav>
+    <p class="fine">© 2026 Dreams of Humanity · Patterns, not diagnoses · Every film is AI-generated</p>
   </div>
 </footer>
 
+<script src="/app/map.js"></script>
 <script src="/site.js"></script>
 </body>
 </html>

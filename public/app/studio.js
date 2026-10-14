@@ -808,7 +808,8 @@ $("removeExamples").onclick = async () => {
   entries.filter(e => e.status === "pending" && Date.now() - e.at > 60000).forEach(e => analyse(e));
   if (apiKey) loadModels(); else { const sel = $("modelSel"); sel.replaceChildren(...FALLBACK_MODELS.map(id => { const o = el("option", null, id); o.value = id; return o; })); updateRenderBox(); }
   const h = location.hash.slice(1);
-  tab(["journal", "map", "cast"].includes(h) ? h : "write");
+  if (h === "examples") { if (!entries.some(e => e.example)) await loadExamples(); else tab("map"); history.replaceState(null, "", "#map"); }
+  else tab(["journal", "map", "cast"].includes(h) ? h : "write");
   writeCastHint();
 })();
 })();

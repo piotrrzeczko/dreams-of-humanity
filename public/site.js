@@ -94,6 +94,20 @@ const screenIO = new IntersectionObserver(es => es.forEach(e => {
 }), { threshold: .3 });
 if (scenes.length) screenIO.observe(document.getElementById("screen"));
 
+// ── Live example map (same code as the journal app) ────
+if (window.DMap && document.getElementById("lConst")) {
+  const ex = DMap.EXAMPLES, prof = DMap.EXAMPLE_PROFILE;
+  DMap.setProfile(prof);
+  const div = () => document.createElement("div");
+  const go = () => { location.href = "/app/#examples"; };
+  DMap.render(ex, [], {
+    stats: div(), heat: document.getElementById("lHeat"), range: div(), constellation: document.getElementById("lConst"),
+    threads: document.getElementById("lThreads"), people: div(), places: div(), motifs: div(), weather: div(),
+    symbols: div(), archetypes: div(), observations: document.getElementById("lObs"), profile: prof, onPick: go,
+  });
+  document.getElementById("lObs").hidden = false;
+}
+
 // ── Waitlist ────────────────────────────────────────────
 const form = document.getElementById("wlForm");
 form.addEventListener("submit", async e => {
