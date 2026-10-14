@@ -13,6 +13,12 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const path = url.pathname;
+    // Password gate while the site is being built: active only when the SITE_PASSWORD secret is set.
+    if (env.SITE_PASSWORD) {
+      const gate = await gateCheck(request, env, url);
+      if (gate) return gate;
+    }
+    if (!path.startsWith("/api/")) return env.ASSETS.fetch(request);
     try {
       if (path === "/api/waitlist" && request.method === "POST") return waitlist(request, env);
       if (path === "/api/auth/exchange" && request.method === "POST") return authExchange(request);
@@ -31,6 +37,47 @@ export default {
     }
   },
 };
+
+// ── password gate ────────────────────────────────────────
+
+async function sha256hex(text) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function gateCheck(request, env, url) {
+  const token = await sha256hex("doh-gate-v1:" + env.SITE_PASSWORD);
+  const cookies = Object.fromEntries((request.headers.get("cookie") || "").split(/;\s*/).filter(Boolean).map(c => { const i = c.indexOf("="); return [c.slice(0, i), c.slice(i + 1)]; }));
+  if (url.pathname === "/__gate" && request.method === "POST") {
+    const form = await request.formData();
+    const next = String(form.get("next") || "/");
+    const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "/";
+    if (String(form.get("password") || "") === env.SITE_PASSWORD) {
+      return new Response(null, { status: 303, headers: {
+        location: safeNext,
+        "set-cookie": `doh_gate=${token}; Path=/; Max-Age=2592000; HttpOnly; Secure; SameSite=Lax`,
+      } });
+    }
+    return gatePage(safeNext, true);
+  }
+  if (cookies.doh_gate === token) return null;
+  if (url.pathname.startsWith("/api/")) return json({ error: "locked" }, 401);
+  return gatePage(url.pathname + url.search, false);
+}
+
+function gatePage(next, wrong) {
+  const esc = s => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex"><title>Dreams of Humanity</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;1,400&family=DM+Mono&family=Outfit:wght@300;400&display=swap">
+<style>*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:#06050F radial-gradient(ellipse 70% 50% at 50% 40%,rgba(123,94,167,.35),transparent 70%);color:#EDEAF8;font:300 16px Outfit,system-ui,sans-serif;padding:24px}
+form{width:min(360px,100%);display:flex;flex-direction:column;gap:14px;text-align:center}h1{font:italic 400 2.6rem/1.05 "Cormorant Garamond",Georgia,serif;margin:0 0 6px}p{margin:0;color:#8B8BAD;font:400 11px "DM Mono",monospace;letter-spacing:.2em;text-transform:uppercase}
+input{width:100%;background:#0D0B1E;border:1px solid #2E2B52;border-radius:99px;color:#EDEAF8;font:inherit;padding:14px 20px;text-align:center}input:focus{outline:none;border-color:#7B5EA7}
+button{background:#7B5EA7;border:0;border-radius:99px;color:#F9F8FF;font:500 15px Outfit,sans-serif;padding:14px;cursor:pointer;box-shadow:0 0 28px rgba(123,94,167,.5)}.err{color:#C4687A;text-transform:none;letter-spacing:0;font-family:Outfit,sans-serif;font-size:14px}</style></head>
+<body><form method="post" action="/__gate"><p>Dreams of Humanity</p><h1>Still dreaming.</h1><p>Private preview</p>
+<input type="password" name="password" placeholder="Password" autofocus autocomplete="current-password" aria-label="Password"><input type="hidden" name="next" value="${esc(next)}">
+<button type="submit">Enter</button>${wrong ? '<p class="err">That is not the password.</p>' : ""}</form></body></html>`;
+  return new Response(html, { status: wrong ? 401 : 200, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex" } });
+}
 
 // ── helpers ──────────────────────────────────────────────
 
