@@ -314,7 +314,7 @@ function renderConstellation(B, svg, onPick) {
       const a = P[e.s], b = P[e.t], dx = b.x - a.x, dy = b.y - a.y, d = Math.sqrt(dx * dx + dy * dy) || 1, f = (d - 110) * 0.004 * Math.min(e.w, 4);
       a.vx += dx / d * f; a.vy += dy / d * f; b.vx -= dx / d * f; b.vy -= dy / d * f;
     }
-    for (const p of P) { p.vx += (cx - p.x) * 0.006; p.vy += (cy - p.y) * 0.008; p.x += p.vx * 0.5; p.y += p.vy * 0.5; p.vx *= 0.6; p.vy *= 0.6; p.x = Math.max(60, Math.min(W - 60, p.x)); p.y = Math.max(40, Math.min(H - 40, p.y)); }
+    for (const p of P) { p.vx += (cx - p.x) * 0.006; p.vy += (cy - p.y) * 0.008; p.x += p.vx * 0.5; p.y += p.vy * 0.5; p.vx *= 0.6; p.vy *= 0.6; p.x = Math.max(110, Math.min(W - 110, p.x)); p.y = Math.max(40, Math.min(H - 40, p.y)); }
   }
   const maxW = Math.max(1, ...edges.map(e => e.w));
   const gE = svgEl("g", {});
