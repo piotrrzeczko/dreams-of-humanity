@@ -791,9 +791,11 @@ function renderMap() {
   });
   renderSynthState();
 }
+// Bump when the example journal changes; older example entries saved in this browser are replaced.
+const EXAMPLES_VERSION = 2;
 async function loadExamples() {
-  for (const e of DMap.EXAMPLES) await idb.put("dreams", JSON.parse(JSON.stringify(e)));
-  if (!profile) saveProfile(JSON.parse(JSON.stringify(DMap.EXAMPLE_PROFILE)));
+  for (const e of DMap.EXAMPLES) await idb.put("dreams", Object.assign(JSON.parse(JSON.stringify(e)), { exv: EXAMPLES_VERSION }));
+  if (!profile || profile.example) saveProfile(Object.assign(JSON.parse(JSON.stringify(DMap.EXAMPLE_PROFILE)), { exv: EXAMPLES_VERSION }));
   await loadEntries(); tab("map");
 }
 $("loadExamples").onclick = loadExamples;
@@ -812,6 +814,13 @@ $("removeExamples").onclick = async () => {
   await loadCast();
   loadProfile();
   await loadEntries();
+  // swap an outdated example journal (e.g. the first Polish one) for the current one
+  const stale = entries.filter(e => e.example && e.exv !== EXAMPLES_VERSION);
+  if (stale.length || (profile && profile.example && profile.exv !== EXAMPLES_VERSION)) {
+    for (const e of stale) await idb.del("dreams", e.id);
+    if (profile && profile.example) clearProfile();
+    if (stale.length) await loadExamples(); else await loadEntries();
+  }
   // retry dreams whose filing was interrupted
   entries.filter(e => e.status === "pending" && Date.now() - e.at > 60000).forEach(e => analyse(e));
   if (apiKey) loadModels(); else { const sel = $("modelSel"); sel.replaceChildren(...FALLBACK_MODELS.map(id => { const o = el("option", null, id); o.value = id; return o; })); updateRenderBox(); }
