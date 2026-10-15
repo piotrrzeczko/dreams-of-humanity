@@ -245,3 +245,5 @@ main,.foot,.nav{position:relative;z-index:2}
 /* ── large screens: let the layout breathe ── */
 @media (min-width:1800px){:root{--max:1480px}}
 @media (min-width:2300px){:root{--max:1640px}body{font-size:20px}}
+#lThreads .thread:nth-child(n+5){display:none}
+@media (max-width:640px){.const-card{overflow-x:auto}#lConst{min-width:560px}}
