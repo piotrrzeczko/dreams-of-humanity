@@ -67,32 +67,10 @@ const onScroll = () => nav.classList.toggle("solid", scrollY > 40);
 onScroll(); addEventListener("scroll", onScroll, { passive: true });
 
 // ── Reveal on scroll ────────────────────────────────────
-const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { threshold: .12, rootMargin: "0px 0px -6% 0px" });
+// Content is visible by default; it only fades in when this script runs (html.js).
+if (!("IntersectionObserver" in window)) document.querySelectorAll(".reveal").forEach(el => el.classList.add("in"));
+const io = !("IntersectionObserver" in window) ? { observe() {}, unobserve() {} } : new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { threshold: .06, rootMargin: "0px 0px -4% 0px" });
 document.querySelectorAll(".reveal").forEach((el, i) => { el.style.transitionDelay = (el.closest(".hero") ? i * 120 : 0) + "ms"; io.observe(el); });
-
-// ── Demo: four shots on a loop ──────────────────────────
-const scenes = [...document.querySelectorAll("#screen .scene")];
-const items = [...document.querySelectorAll("#shots li")];
-const prog = document.getElementById("prog"), tcLive = document.getElementById("tcLive");
-const bounds = [0, 7, 15, 23, 30];
-let cur = 0, start = performance.now(), running = false;
-const SPEED = 2.2; // demo plays at 2.2x
-function setShot(i) { cur = i; scenes.forEach((s, k) => s.classList.toggle("on", k === i)); items.forEach((s, k) => s.classList.toggle("on", k === i)); }
-function tick(now) {
-  if (!running) return;
-  const sec = ((now - start) / 1000 * SPEED) % 30;
-  const i = bounds.findIndex((b, k) => sec >= b && sec < bounds[k + 1]);
-  if (i !== cur) setShot(i);
-  prog.style.width = (sec / 30 * 100) + "%";
-  tcLive.textContent = "0:" + String(Math.floor(sec)).padStart(2, "0");
-  requestAnimationFrame(tick);
-}
-items.forEach((li, k) => li.addEventListener("click", () => { start = performance.now() - bounds[k] / SPEED * 1000; setShot(k); }));
-const screenIO = new IntersectionObserver(es => es.forEach(e => {
-  if (e.isIntersecting && !running && !reduce) { running = true; start = performance.now() - bounds[cur] / SPEED * 1000; requestAnimationFrame(tick); }
-  if (!e.isIntersecting) running = false;
-}), { threshold: .3 });
-if (scenes.length) screenIO.observe(document.getElementById("screen"));
 
 // ── Live example map (same code as the journal app) ────
 if (window.DMap && document.getElementById("lConst")) {

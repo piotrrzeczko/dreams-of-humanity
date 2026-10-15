@@ -356,63 +356,9 @@ function renderWeather(list, box) {
   const lg = el("div", "legend"); EMO_GROUPS.forEach(([n, c]) => { const s = el("span"); const i = el("i"); i.style.background = c; s.append(i, document.createTextNode(n)); lg.append(s); }); box.append(lg);
 }
 
-// ── example journal (Polish), so the map is visible on day one ──
-const X = (date, title, dream, people, places, motifs, emotions, extra) => ({
-  id: "x" + date.replace(/-/g, ""), example: true, at: new Date(date + "T07:30:00").getTime(), date, dream, title, status: "done",
-  analysis: Object.assign({ title, summary: "", people: people.map(l => ({ label: l, cast_id: null })), places: places.map(l => ({ label: l, cast_id: null })), objects: [], motifs, emotions: emotions.map(([name, intensity]) => ({ name, intensity })), time_refs: [], cast_suggestions: [], nightmare: false, lucid: false }, extra || {}),
-});
-const EXAMPLES = [
-  X("2026-07-21", "Kuchnia jak dworzec", "Byłem w kuchni babci, ale była ogromna jak hala dworcowa. Babcia smażyła placki, nie odwracała się. Podłoga się wydłużała.", ["babcia"], ["kuchnia babci"], ["deceased loved one", "endless space"], [["longing", 4], ["confusion", 2]], { summary: "Babcia w ogromnej kuchni, do której nie da się dojść.", time_refs: ["dzieciństwo"] }),
-  X("2026-07-29", "Egzamin bez pytań", "Siedziałem na egzaminie w podstawówce, kartka była pusta. Nauczycielka od matematyki patrzyła na zegar.", ["nauczycielka"], ["szkoła podstawowa"], ["exam", "being late"], [["anxiety", 4]], { summary: "Pusta kartka na egzaminie w podstawówce." }),
-  X("2026-08-03", "Schody w dół", "Schodziłem po schodach w bloku na Grochowie, z każdym krokiem pojawiały się trzy kolejne. Na dole ktoś wołał moje imię.", [], ["blok na grochowie"], ["falling", "endless space"], [["fear", 3], ["confusion", 3]], { summary: "Niekończące się schody w dawnym bloku." }),
-  X("2026-08-11", "Ojciec w płaszczu", "Tata stał w przedpokoju w płaszczu, jakby właśnie wrócił. Pachniało deszczem. Nic nie mówił, tylko się uśmiechał.", ["tata"], ["mieszkanie rodziców"], ["deceased loved one", "returning home"], [["longing", 5], ["love", 3]], { summary: "Tata wraca do domu w płaszczu i milczy." }),
-  X("2026-08-19", "Powódź na wsi", "Woda powoli zalewała dom na wsi. Babcia siedziała na stole i obierała jabłka, jakby nic się nie działo.", ["babcia"], ["dom na wsi"], ["flood", "water", "deceased loved one"], [["calm", 3], ["awe", 2]], { summary: "Spokojna powódź w domu na wsi, babcia obiera jabłka." }),
-  X("2026-08-27", "Korytarz bez końca", "Ktoś mnie gonił długim korytarzem szkoły. Drzwi były zamknięte, a korytarz się wydłużał.", ["ktoś w kapturze"], ["szkoła podstawowa"], ["being chased", "endless space"], [["fear", 5]], { summary: "Ucieczka korytarzem szkoły przed postacią w kapturze.", nightmare: true }),
-  X("2026-09-04", "Latanie nad Wisłą", "Leciałem nad Wisłą, ale miasto było ułożone inaczej. Kiedy pomyślałem, że latam, zacząłem spadać.", [], ["warszawa"], ["flying", "falling"], [["joy", 4], ["fear", 2]], { summary: "Lot nad przestawioną Warszawą, który kończy się spadaniem.", lucid: true }),
-  X("2026-09-12", "Placki i deszcz", "Znowu kuchnia babci. Tym razem był tam tata i razem jedli placki. Za oknem padał deszcz.", ["babcia", "tata"], ["kuchnia babci"], ["deceased loved one", "family gathering"], [["longing", 4], ["love", 4]], { summary: "Babcia i tata razem w kuchni, za oknem deszcz.", time_refs: ["dzieciństwo"] }),
-  X("2026-09-18", "Spóźniony pociąg", "Biegłem na pociąg z walizką pełną kamieni. Pociąg odjechał, a na peronie stała moja nauczycielka.", ["nauczycielka"], ["dworzec"], ["being late", "heavy burden"], [["anxiety", 4], ["shame", 2]], { summary: "Spóźnienie na pociąg z walizką kamieni." }),
-  X("2026-09-25", "Ukryty pokój", "W domu na wsi znalazłem drzwi, których nigdy nie było. W środku pokój większy niż cały dom, pełen starych zdjęć.", [], ["dom na wsi"], ["house with hidden rooms", "endless space"], [["awe", 4], ["longing", 2]], { summary: "Odkrycie ukrytego pokoju ze starymi zdjęciami." }),
-  X("2026-10-01", "Ciemna woda", "Stałem nad jeziorem, woda była idealnie gładka. Wiedziałem, że coś ogromnego jest tuż pod powierzchnią.", [], ["jezioro"], ["water", "something beneath"], [["fear", 3], ["awe", 3]], { summary: "Nieruchome jezioro i przeczucie czegoś pod wodą.", nightmare: true }),
-  X("2026-10-06", "Babcia mówi", "Babcia w kuchni w końcu się odwróciła i powiedziała: usiądź, zaraz będzie. Obudziłem się ze ściśniętym gardłem.", ["babcia"], ["kuchnia babci"], ["deceased loved one", "message from the dead"], [["longing", 5], ["relief", 3]], { summary: "Babcia się odwraca i zaprasza do stołu.", time_refs: ["dzieciństwo"] }),
-  X("2026-10-10", "Pościg na dworcu", "Ten sam człowiek w kapturze gonił mnie po dworcu. Pociągi odjeżdżały bez dźwięku.", ["ktoś w kapturze"], ["dworzec"], ["being chased", "being late"], [["fear", 4], ["anxiety", 3]], { summary: "Postać w kapturze goni po cichym dworcu.", nightmare: true }),
-  X("2026-10-13", "Dom nad jeziorem", "Tata naprawiał pomost przy jeziorze. Woda była spokojna, a w domu na wsi paliło się światło.", ["tata"], ["jezioro", "dom na wsi"], ["water", "returning home"], [["calm", 4], ["longing", 3]], { summary: "Tata naprawia pomost, w domu na wsi pali się światło." }),
-];
-// symbols, events and shared archetypes for the examples
-const EX_MORE = {
-  "2026-07-21": [["patelnia", "placki"], ["babcia smaży placki tyłem do mnie", "podłoga się wydłuża"], ["deceased_alive", "childhood_home"], { babcia: "great_mother" }],
-  "2026-07-29": [["pusta kartka", "zegar"], ["egzamin bez pytań"], ["exam"], {}],
-  "2026-08-03": [["schody"], ["schodzenie bez końca", "ktoś woła moje imię"], ["falling", "lost"], {}],
-  "2026-08-11": [["płaszcz", "deszcz"], ["tata wraca do domu"], ["deceased_alive"], {}],
-  "2026-08-19": [["woda", "jabłka"], ["woda zalewa dom", "babcia obiera jabłka"], ["flood", "deceased_alive"], { babcia: "great_mother" }],
-  "2026-08-27": [["kaptur", "zamknięte drzwi"], ["pościg korytarzem"], ["chased", "exam"], { "ktoś w kapturze": "shadow" }],
-  "2026-09-04": [["rzeka"], ["lot nad miastem", "spadanie"], ["flying", "falling"], {}],
-  "2026-09-12": [["placki", "deszcz"], ["wspólny posiłek z babcią i tatą"], ["deceased_alive", "childhood_home"], { babcia: "great_mother" }],
-  "2026-09-18": [["walizka kamieni", "pociąg"], ["spóźnienie na pociąg"], ["late"], {}],
-  "2026-09-25": [["ukryte drzwi", "stare zdjęcia"], ["odkrycie ukrytego pokoju"], ["hidden_rooms", "childhood_home"], {}],
-  "2026-10-01": [["woda", "coś pod powierzchnią"], ["czekanie nad jeziorem"], ["flood"], {}],
-  "2026-10-06": [["placki"], ["babcia się odwraca i mówi"], ["deceased_alive", "childhood_home"], { babcia: "great_mother" }],
-  "2026-10-10": [["kaptur", "pociąg"], ["pościg po dworcu", "pociągi odjeżdżają bez dźwięku"], ["chased", "late"], { "ktoś w kapturze": "shadow" }],
-  "2026-10-13": [["woda", "światło w oknie", "pomost"], ["tata naprawia pomost"], ["deceased_alive"], {}],
-};
-for (const e of EXAMPLES) {
-  const [symbols, events, archetypes, roles] = EX_MORE[e.date] || [[], [], [], {}];
-  Object.assign(e.analysis, { symbols, events, archetypes });
-  e.analysis.people.forEach(p => { p.archetype = roles[p.label] || null; });
-}
-const xid = d => "x" + d.replace(/-/g, "");
-const EXAMPLE_PROFILE = {
-  example: true,
-  aliases: [{ canonical: "tata", variants: ["ojciec", "mój tata"] }],
-  threads: [
-    { name: "Kuchnia babci", description: "Babcia w swojej kuchni, z czasem coraz bliżej: najpierw odwrócona plecami, w październiku odwraca się i mówi.", keys: ["babcia", "kuchnia babci", "placki"], entry_ids: ["2026-07-21", "2026-09-12", "2026-10-06"].map(xid) },
-    { name: "Postać w kapturze", description: "Ta sama postać w kapturze goni, najpierw w szkole, potem na dworcu.", keys: ["ktoś w kapturze", "kaptur"], entry_ids: ["2026-08-27", "2026-10-10"].map(xid) },
-    { name: "Dom na wsi i woda", description: "Dom na wsi wraca razem z wodą: powódź, ukryty pokój, jezioro i światło w oknie.", keys: ["dom na wsi", "woda", "jezioro"], entry_ids: ["2026-08-19", "2026-09-25", "2026-10-01", "2026-10-13"].map(xid) },
-    { name: "Spóźnienie", description: "Egzamin, pociąg i dworzec: sytuacje, w których czas ucieka, często z nauczycielką w tle.", keys: ["nauczycielka", "dworzec", "being late"], entry_ids: ["2026-07-29", "2026-09-18", "2026-10-10"].map(xid) },
-  ],
-  archetypes: [{ id: "deceased_alive", count: 6 }, { id: "childhood_home", count: 4 }, { id: "chased", count: 2 }],
-  notes: "",
-  observations: ["Babcia pojawia się mniej więcej co 3–4 tygodnie, zawsze w kuchni.", "Koszmary skupiają się w ostatnich trzech tygodniach.", "Woda pojawia się w 4 snach, od powodzi do spokojnego jeziora."],
-};
+// ── example journal (public/app/examples.js), so the map is visible on day one ──
+const EXAMPLES = (window.DMAP_EXAMPLES && window.DMAP_EXAMPLES.entries) || [];
+const EXAMPLE_PROFILE = (window.DMAP_EXAMPLES && window.DMAP_EXAMPLES.profile) || null;
 
 window.DMap = { features, build, echoes, castCandidates, render, castIndex, dateOf, EXAMPLES, EXAMPLE_PROFILE, fmtDay, setProfile, ARCHETYPES, archName };
 })();

@@ -4,6 +4,7 @@
   --serif:"Cormorant Garamond",Georgia,"Times New Roman",serif;--mono:"DM Mono",ui-monospace,Menlo,monospace;--sans:"Outfit",system-ui,-apple-system,"Segoe UI",sans-serif;
   --gutter:max(20px,env(safe-area-inset-left,0px));--gutter-r:max(20px,env(safe-area-inset-right,0px));
   --max:1320px;
+  --sec-pad:clamp(72px,10vh,132px);
   color-scheme:dark;
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -68,7 +69,7 @@ main,.foot,.nav{position:relative;z-index:2}
 @media (max-width:640px){.hero{padding-top:120px;padding-bottom:140px}.hero-cta{flex-direction:column;width:100%}.hero-cta .btn{width:100%}.hero-foot{letter-spacing:.1em;line-height:2}.hero-foot i{margin:0 .3em}}
 
 /* ── sections ── */
-.sec{padding:clamp(90px,14vh,180px) 0;position:relative}
+.sec{padding:var(--sec-pad) 0;position:relative}
 .sec::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,5,15,0) 0%,rgba(6,5,15,.78) 18%,rgba(6,5,15,.78) 82%,rgba(6,5,15,0) 100%);z-index:-1;pointer-events:none}
 .sec-head{max-width:880px;margin-bottom:clamp(40px,6vh,80px)}
 
@@ -96,9 +97,9 @@ main,.foot,.nav{position:relative;z-index:2}
 .reel-row{display:flex;gap:clamp(14px,1.6vw,26px);overflow-x:auto;scroll-snap-type:x mandatory;padding:10px max(var(--gutter),calc((100vw - var(--max))/2 + 20px)) 30px;scrollbar-width:none}
 .reel-row::-webkit-scrollbar{display:none}
 .frame{flex:0 0 clamp(250px,24vw,360px);scroll-snap-align:start;position:relative;border-radius:18px;overflow:hidden;border:1px solid var(--dusk);background:var(--deep);aspect-ratio:4/5.2;transition:transform .5s,border-color .5s}
-.frame svg{position:absolute;inset:0;width:100%;height:100%;transition:transform 6s ease}
+.frame svg,.frame img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform 6s ease}
 .frame:hover{border-color:var(--mist);transform:translateY(-6px)}
-.frame:hover svg{transform:scale(1.08)}
+.frame:hover svg,.frame:hover img{transform:scale(1.06)}
 .frame::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,5,15,0) 40%,rgba(6,5,15,.92) 100%)}
 .frame figcaption{position:absolute;left:20px;right:20px;bottom:20px;z-index:1;font-family:var(--serif);font-style:italic;font-size:1.15rem;line-height:1.3;color:var(--white)}
 .theme{display:block;font-family:var(--mono);font-style:normal;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--amber);margin-bottom:8px}
@@ -118,7 +119,7 @@ main,.foot,.nav{position:relative;z-index:2}
 .locked span{display:block;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--violet-hi);margin-bottom:8px}
 .cast-frames{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}
 .cast-frames figure{border-radius:14px;overflow:hidden;border:1px solid var(--dusk);background:var(--deep)}
-.cast-frames svg{width:100%;height:auto;aspect-ratio:3/4}
+.cast-frames svg,.cast-frames img{width:100%;height:auto;aspect-ratio:3/4;object-fit:cover}
 .cast-frames figcaption{font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--silver);padding:8px 10px}
 @media (max-width:900px){.cast-grid{grid-template-columns:1fr}}
 
@@ -156,9 +157,9 @@ main,.foot,.nav{position:relative;z-index:2}
 .foot nav a:hover{color:var(--white)}
 .foot .fine{margin:0}
 
-/* ── reveal ── */
-.reveal{opacity:0;transform:translateY(28px);transition:opacity 1s ease,transform 1s cubic-bezier(.2,.7,.2,1)}
-.reveal.in{opacity:1;transform:none}
+/* ── reveal (only hides when JS is running) ── */
+.js .reveal{opacity:0;transform:translateY(28px);transition:opacity 1s ease,transform 1s cubic-bezier(.2,.7,.2,1)}
+.js .reveal.in{opacity:1;transform:none}
 @media (prefers-reduced-motion:reduce){
   .reveal{opacity:1;transform:none;transition:none}
   .grain,.dot,.scroll-cue span{animation:none}
@@ -217,3 +218,30 @@ main,.foot,.nav{position:relative;z-index:2}
 .obs{padding-left:1.1em;display:flex;flex-direction:column;gap:8px;color:var(--white);font-family:var(--serif);font-size:1.2rem;line-height:1.45}
 .obs li::marker{color:#f0d49c}
 .lmap .reel-note{margin-top:28px;text-align:center}
+
+/* ── film storyboard ── */
+.film-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(28px,5vw,90px);align-items:end;max-width:none}
+@media (max-width:900px){.film-head{grid-template-columns:1fr}}
+.board{list-style:none;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(12px,1.4vw,22px)}
+@media (max-width:1100px){.board{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.board{grid-template-columns:1fr}}
+.still figure{margin:0;display:flex;flex-direction:column;gap:14px}
+.still img{width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;border-radius:14px;border:1px solid var(--dusk);background:var(--deep);box-shadow:0 30px 70px -30px rgba(6,5,15,.9)}
+.still figcaption{color:var(--ghost);font-size:.92em;line-height:1.5}
+.still figcaption b{display:block;font-family:var(--mono);font-weight:400;font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--violet-hi);margin:2px 0 6px}
+.still .tc{font-family:var(--mono);font-size:11px;color:var(--amber);letter-spacing:.06em}
+.film .fine{margin-top:28px}
+
+/* ── gallery as a grid on wide screens ── */
+@media (min-width:1100px){
+  .reel-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));overflow:visible;max-width:var(--max);margin:0 auto;padding:10px var(--gutter-r) 30px var(--gutter)}
+  .frame{flex:none}
+}
+
+/* ── hero foot on phones ── */
+.hero-foot span{white-space:nowrap}
+@media (max-width:640px){.hero-foot{display:flex;flex-direction:column;gap:2px;line-height:1.8}.hero-foot i{display:none}.scroll-cue{display:none}}
+
+/* ── large screens: let the layout breathe ── */
+@media (min-width:1800px){:root{--max:1480px}}
+@media (min-width:2300px){:root{--max:1640px}body{font-size:20px}}

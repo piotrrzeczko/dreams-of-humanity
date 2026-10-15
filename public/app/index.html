@@ -106,7 +106,7 @@
     <div id="mapEmpty" class="empty" hidden>
       <div class="moon">☾</div>
       <p>Your map appears after a few nights.</p>
-      <div class="row center"><button class="btn small" id="mapWrite">Write tonight's dream</button><button class="btn ghost small" id="loadExamples">See it with 14 example dreams</button></div>
+      <div class="row center"><button class="btn small" id="mapWrite">Write tonight's dream</button><button class="btn ghost small" id="loadExamples">See it with 30 example dreams</button></div>
     </div>
     <div id="mapBody" hidden>
       <div class="stats" id="mStats"></div>
@@ -138,7 +138,7 @@
           <div class="bars" id="mPlaces"></div>
         </section>
       </div>
-      <section class="card">
+      <section class="card wide">
         <div class="label"><span>Shared with humanity</span><span>dream patterns people report everywhere</span></div>
         <div class="archs" id="mArch"></div>
       </section>
@@ -152,7 +152,7 @@
           <div class="cloud" id="mMotifs"></div>
         </section>
       </div>
-      <section class="card">
+      <section class="card wide">
         <div class="label"><span>Emotional weather</span><span>by month</span></div>
         <div class="weather" id="mWeather"></div>
       </section>
@@ -286,10 +286,10 @@
         <button type="button" data-k="place" aria-pressed="false">Place</button>
       </div>
       <div class="grid2">
-        <label class="field"><span>Name</span><input type="text" id="edName" placeholder="Babcia"></label>
+        <label class="field"><span>Name</span><input type="text" id="edName" placeholder="Grandma"></label>
         <label class="field"><span id="edRelLabel">Who are they to you?</span><input type="text" id="edRel" placeholder="my grandmother"></label>
       </div>
-      <label class="field"><span>Other words you use for them</span><input type="text" id="edAliases" placeholder="babci, babunia, grandma"></label>
+      <label class="field"><span>Other words you use for them</span><input type="text" id="edAliases" placeholder="Gran, my grandmother, Nana"></label>
       <label class="field"><span>What they look like (your words, any language)</span><textarea id="edNotes" rows="3" placeholder="Short grey hair, round glasses, always a blue apron with flowers…"></textarea></label>
 
       <div class="photo">
@@ -330,6 +330,7 @@
 
   <footer>Your journal stays on this device · films are AI-generated, for private use</footer>
 </div>
+<script src="/app/examples.js"></script>
 <script src="/app/map.js"></script>
 <script src="/app/studio.js"></script>
 </body>

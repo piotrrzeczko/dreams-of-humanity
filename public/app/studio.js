@@ -12,11 +12,19 @@ const store = {
   del(k) { try { localStorage.removeItem(k); } catch {} },
 };
 
+// ── Whose data this is ──────────────────────────────────
+// Today a journal lives only on this device ("local"). With accounts, each signed-in person gets their own
+// scope: a separate local database here, and on the server rows keyed by their user id that the API reads
+// with the id from the session cookie only, never from anything the browser sends.
+const SCOPE = "local";
+const DB_NAME = SCOPE === "local" ? "dreams-of-humanity" : "doh-" + SCOPE;
+const skey = k => SCOPE === "local" ? k : SCOPE + ":" + k;
+
 // ── IndexedDB ───────────────────────────────────────────
 const idb = (() => {
   let dbp = null;
   const open = () => dbp || (dbp = new Promise((res, rej) => {
-    const r = indexedDB.open("dreams-of-humanity", 1);
+    const r = indexedDB.open(DB_NAME, 1);
     r.onupgradeneeded = () => {
       const d = r.result;
       d.createObjectStore("dreams", { keyPath: "id" });
@@ -269,7 +277,7 @@ $("edDelete").onclick = async () => {
 };
 
 // ── Dream flow ──────────────────────────────────────────
-const EXAMPLE = "Byłem w domu babci na wsi, ale kuchnia była ogromna, jak hala dworcowa. Babcia (która nie żyje od 5 lat) stała przy kuchence i smażyła placki, pachniało jabłkami. Nie odwracała się. Chciałem do niej podejść, ale podłoga ciągle się wydłużała. W końcu powiedziała tylko „usiądź, zaraz będzie” i obudziłem się ze ściśniętym gardłem.";
+const EXAMPLE = "I was at my grandmother's house in the country, but the kitchen was huge, like a station hall. Grandma (who died five years ago) stood at the stove frying pancakes, it smelled of apples. She didn't turn around. I wanted to walk over to her, but the floor kept stretching. In the end she just said \"sit down, it's nearly ready\" and I woke up with a lump in my throat.";
 const cards = ["inputCard", "thinkCard", "clarifyCard", "msgCard", "resultCard"];
 const show = id => { cards.forEach(c => $(c).hidden = c !== id); $("dreamIntro").hidden = id === "resultCard"; };
 let perspective = "mixed", aspect = "9:16", ctl = null, lastReq = null, current = null;
@@ -306,7 +314,7 @@ async function run(extra) {
 async function handle(o) {
   if (o && o.blocked) {
     let m = o.message || "We can't film this one.";
-    if (o.reason === "SELF_HARM") m += "\n\nW Polsce: Telefon zaufania 116 123 (dorośli), 116 111 (dzieci i młodzież). W nagłej sytuacji 112.";
+    if (o.reason === "SELF_HARM") m += "\n\nIn Poland: helpline 116 123 (adults), 116 111 (children and young people). In an emergency call 112. Elsewhere, your local emergency number.";
     $("msgText").textContent = m; $("retryBtn").hidden = true; return show("msgCard");
   }
   if (o && o.needs_clarification && !(lastReq && lastReq.clarification_answer !== undefined)) {
@@ -538,11 +546,11 @@ function knownLabels() {
 // Rebuilt by /api/synthesize every few new dreams; kept on this device.
 let profile = null;
 function loadProfile() {
-  try { profile = JSON.parse(store.get("doh_profile") || "null"); } catch { profile = null; }
+  try { profile = JSON.parse(store.get(skey("doh_profile")) || "null"); } catch { profile = null; }
   DMap.setProfile(profile);
 }
-function saveProfile(p) { profile = p; store.set("doh_profile", JSON.stringify(p)); DMap.setProfile(p); }
-function clearProfile() { profile = null; store.del("doh_profile"); DMap.setProfile(null); }
+function saveProfile(p) { profile = p; store.set(skey("doh_profile"), JSON.stringify(p)); DMap.setProfile(p); }
+function clearProfile() { profile = null; store.del(skey("doh_profile")); DMap.setProfile(null); }
 const analysedReal = () => entries.filter(e => e.analysis && !e.example);
 let synthRunning = false;
 async function synthesize(force) {
@@ -584,8 +592,8 @@ function renderSynthState() {
 // Write
 $("wDate").value = today();
 $("wDate").max = today();
-const wDraft = store.get("doh_wdraft"); if (wDraft) $("wText").value = wDraft;
-$("wText").addEventListener("input", () => { store.set("doh_wdraft", $("wText").value); writeCastHint(); });
+const wDraft = store.get(skey("doh_wdraft")); if (wDraft) $("wText").value = wDraft;
+$("wText").addEventListener("input", () => { store.set(skey("doh_wdraft"), $("wText").value); writeCastHint(); });
 function writeCastHint() {
   const box = $("wCastHint");
   if (!cast.length) { box.hidden = true; return; }
@@ -601,7 +609,7 @@ $("wSave").onclick = async () => {
   if (text.length < 8) { $("wMsg").textContent = "Even a fragment helps, write a few more words."; return; }
   const e = { id: uid("d"), at: Date.now(), date: $("wDate").value || today(), dream: text, title: text.split(/\s+/).slice(0, 5).join(" ") + "…", analysis: null, status: "pending" };
   await idb.put("dreams", e);
-  $("wText").value = ""; store.del("doh_wdraft"); $("wMsg").textContent = ""; writeCastHint();
+  $("wText").value = ""; store.del(skey("doh_wdraft")); $("wMsg").textContent = ""; writeCastHint();
   await loadEntries();
   openEntry(e);
   analyse(e);
@@ -745,7 +753,7 @@ function renderJournal() {
   if (!entries.length) {
     const e = el("div", "empty"); e.append(el("div", "moon", "☾"), el("p", null, "Your journal is empty."));
     const row = el("div", "row center"); const w = el("button", "btn small", "Write tonight's dream"); w.onclick = () => tab("write");
-    const x = el("button", "btn ghost small", "Load 14 example dreams"); x.onclick = loadExamples; row.append(w, x); e.append(row); list.append(e); return;
+    const x = el("button", "btn ghost small", "Load 30 example dreams"); x.onclick = loadExamples; row.append(w, x); e.append(row); list.append(e); return;
   }
   const ci = DMap.castIndex(cast), q = $("jSearch").value.trim().toLowerCase();
   let month = "", shown = 0;

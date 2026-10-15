@@ -206,3 +206,23 @@ footer{font-size:12px;color:var(--silver);text-align:center;font-family:var(--mo
 .obs{margin:0 0 12px;padding-left:1.1em;display:flex;flex-direction:column;gap:6px;color:var(--white);font-family:var(--serif);font-size:1.1rem;line-height:1.45}
 .obs li::marker{color:#f0d49c}
 .row.synth{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+
+/* fixed glow layer (background-attachment:fixed is ignored on iOS) */
+body{background-image:none}
+body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+background:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(123,94,167,.28),transparent 70%),radial-gradient(ellipse 60% 40% at 100% 100%,rgba(196,104,122,.10),transparent 70%)}
+
+/* wide screens: reading views stay narrow, the map spreads out */
+@media (min-width:1100px){
+  body{font-size:17px}
+  .wrap{max-width:min(1240px,92vw)}
+  .top,.tabs{width:100%;max-width:760px;margin-left:auto;margin-right:auto}
+  [data-view]:not([data-view=map]),#connectCard,#acctCard{width:100%;max-width:760px;margin-left:auto;margin-right:auto}
+  [data-view=journal]{max-width:860px}
+  [data-view=map] .intro{max-width:760px}
+  #mapBody:not([hidden]){display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
+  #mapBody>.stats,#mapBody>.map-cols,#mapBody>.wide,#mapBody>#exampleNote{grid-column:1/-1}
+  #mapBody>.card{height:100%}
+  .stats{grid-template-columns:repeat(5,minmax(0,1fr))}
+}
+@media (min-width:1800px){body{font-size:18px}.wrap{max-width:1400px}}
