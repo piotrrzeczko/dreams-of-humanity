@@ -231,3 +231,38 @@ background:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(123,94,167,.28),tran
   #mThreads{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 }
 @media (max-width:640px){#mConst{min-width:560px}}
+.err{margin:0;padding:12px 14px;border-radius:12px;border:1px solid rgba(196,104,122,.45);background:rgba(196,104,122,.1);color:#f0b3be;font-size:14px}
+
+/* constellation sky */
+svg.sky .stars .tw{animation:twinkle 3.6s ease-in-out infinite}
+@keyframes twinkle{50%{opacity:.05}}
+@media (prefers-reduced-motion:reduce){svg.sky .stars .tw{animation:none}}
+svg.sky .node{cursor:pointer;transition:opacity .25s}
+svg.sky .edges path{transition:stroke-opacity .25s,stroke .25s}
+svg.sky.focus .node{opacity:.25}
+svg.sky.focus .node.lit,svg.sky.focus .node.near{opacity:1}
+svg.sky.focus .edges path{stroke-opacity:.04}
+svg.sky.focus .edges path.lit{stroke:#F0D49C;stroke-opacity:.85}
+svg.sky .nl{font-family:var(--sans);font-size:14px;fill:var(--bone);paint-order:stroke;stroke:#0D0B1E;stroke-width:4px;stroke-linejoin:round}
+svg.sky .node.lit .nl{fill:#fff;font-weight:500}
+svg.sky .hl{font-family:var(--mono);font-size:11px;fill:var(--silver)}
+#mConst{max-height:none;border-radius:16px}
+
+/* recurring people / places as timelines */
+.bars{display:flex;flex-direction:column;gap:2px}
+.tl-row{display:grid;grid-template-columns:36px minmax(0,1fr);gap:12px;align-items:center;background:none;border:0;border-radius:12px;padding:8px 8px;color:inherit;font:inherit;text-align:left;cursor:pointer;transition:background .2s}
+.tl-row:hover,.tl-row:focus-visible{background:rgba(46,43,82,.45)}
+.tl-av{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-family:var(--serif);font-size:1.15rem;color:#fff;background:radial-gradient(circle at 30% 30%,#c9b6f0,#7B5EA7 70%);box-shadow:0 0 16px rgba(154,127,203,.35)}
+.tl-row.place .tl-av{background:radial-gradient(circle at 30% 30%,#f3c793,#B9732F 70%);box-shadow:0 0 16px rgba(212,146,74,.3)}
+.tl-body{display:flex;flex-direction:column;gap:7px;min-width:0}
+.tl-head{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.tl-name{color:var(--white);font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tl-count{font-family:var(--mono);font-size:11px;color:var(--silver);white-space:nowrap}
+.tl-track{position:relative;height:12px}
+.tl-track::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:var(--mist)}
+.tl-track b{position:absolute;top:50%;height:2px;margin-top:-1px;background:linear-gradient(90deg,rgba(154,127,203,.2),rgba(154,127,203,.6));border-radius:2px}
+.tl-row.place .tl-track b{background:linear-gradient(90deg,rgba(212,146,74,.2),rgba(212,146,74,.6))}
+.tl-track i{position:absolute;top:50%;width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border-radius:50%;background:#C9B6F0;box-shadow:0 0 8px rgba(201,182,240,.8)}
+.tl-row.place .tl-track i{background:#F3C793;box-shadow:0 0 8px rgba(243,199,147,.7)}
+.tl-track i.nm{background:var(--rose);box-shadow:0 0 8px rgba(196,104,122,.9)}
+.tl-axis{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10.5px;color:var(--silver);padding:6px 8px 0 56px}

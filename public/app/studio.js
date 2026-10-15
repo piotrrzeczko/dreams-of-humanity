@@ -20,8 +20,8 @@ const SCOPE = "local";
 const DB_NAME = SCOPE === "local" ? "dreams-of-humanity" : "doh-" + SCOPE;
 const skey = k => SCOPE === "local" ? k : SCOPE + ":" + k;
 
-// ── IndexedDB ───────────────────────────────────────────
-const idb = (() => {
+// ── IndexedDB (rendered films only) ─────────────────────
+const local = (() => {
   let dbp = null;
   const open = () => dbp || (dbp = new Promise((res, rej) => {
     const r = indexedDB.open(DB_NAME, 1);
@@ -50,6 +50,24 @@ const idb = (() => {
     del: (name, key) => tx(name, "readwrite", s => s.delete(key)),
   };
 })();
+
+// ── Journal storage ─────────────────────────────────────
+// Dreams and cast live in the shared test journal on the server (Cloudflare D1);
+// rendered films stay in this browser.
+const REMOTE = { dreams: "dream", cast: "cast" };
+const jfetch = async (path, opts = {}) => {
+  const r = await fetch("/api/journal" + path, Object.assign({ headers: { "content-type": "application/json" } }, opts));
+  let data = null; try { data = await r.json(); } catch {}
+  if (!r.ok) { const err = new Error((data && data.message) || "The journal could not be saved."); err.code = (data && data.error) || "http_" + r.status; throw err; }
+  return data;
+};
+const idb = {
+  all: async name => REMOTE[name] ? (await jfetch("/" + REMOTE[name])).items : local.all(name),
+  get: (name, key) => local.get(name, key),
+  put: (name, val, key) => REMOTE[name] ? jfetch("/" + REMOTE[name] + "/" + encodeURIComponent(val.id), { method: "PUT", body: JSON.stringify(val) }) : local.put(name, val, key),
+  del: (name, key) => REMOTE[name] ? jfetch("/" + REMOTE[name] + "/" + encodeURIComponent(key), { method: "DELETE" }) : local.del(name, key),
+  import: (name, items) => jfetch("/import", { method: "POST", body: JSON.stringify({ kind: REMOTE[name], items }) }),
+};
 
 // ── API ─────────────────────────────────────────────────
 const KEY = "doh_or_key";
@@ -545,12 +563,12 @@ function knownLabels() {
 // Aliases, named threads, notes for the next analysis and neutral observations.
 // Rebuilt by /api/synthesize every few new dreams; kept on this device.
 let profile = null;
-function loadProfile() {
-  try { profile = JSON.parse(store.get(skey("doh_profile")) || "null"); } catch { profile = null; }
+async function loadProfile() {
+  try { profile = (await jfetch("/profile")).profile; } catch { profile = null; }
   DMap.setProfile(profile);
 }
-function saveProfile(p) { profile = p; store.set(skey("doh_profile"), JSON.stringify(p)); DMap.setProfile(p); }
-function clearProfile() { profile = null; store.del(skey("doh_profile")); DMap.setProfile(null); }
+function saveProfile(p) { profile = p; DMap.setProfile(p); return jfetch("/profile", { method: "PUT", body: JSON.stringify(p) }).catch(() => {}); }
+function clearProfile() { profile = null; DMap.setProfile(null); return jfetch("/profile", { method: "PUT", body: "null" }).catch(() => {}); }
 const analysedReal = () => entries.filter(e => e.analysis && !e.example);
 let synthRunning = false;
 async function synthesize(force) {
@@ -586,7 +604,7 @@ function renderSynthState() {
   const b = $("synthBtn"); if (!b) return;
   b.disabled = synthRunning;
   b.textContent = synthRunning ? "Reading your whole journal…" : "Refresh insights";
-  if (!synthRunning) $("synthMsg").textContent = profile && profile.at && !profile.example ? "Last read " + new Date(profile.at).toLocaleDateString(undefined, { day: "numeric", month: "short" }) + ", " + (profile.n || 0) + " dreams." : "";
+  if (!synthRunning) $("synthMsg").textContent = profile && profile.at && !profile.example ? "Last read " + new Date(profile.at).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) + ", " + (profile.n || 0) + " dreams." : "";
 }
 
 // Write
@@ -602,7 +620,7 @@ function writeCastHint() {
   cast.forEach((m, i) => { box.append(el("b", mentions(text, m) ? "hit" : "", m.name)); if (i < cast.length - 1) box.append(document.createTextNode(", ")); });
   box.hidden = false;
 }
-$("writeDay").textContent = new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
+$("writeDay").textContent = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
 
 $("wSave").onclick = async () => {
   const text = $("wText").value.trim();
@@ -662,7 +680,7 @@ function facet(label, items, type) {
 
 function renderEntry(e) {
   const a = e.analysis;
-  $("eDate").textContent = new Date(e.date + "T12:00:00").toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  $("eDate").textContent = new Date(e.date + "T12:00:00").toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
   const flags = [];
   if (a && a.nightmare) flags.push("nightmare"); if (a && a.lucid) flags.push("lucid"); if (e.example) flags.push("example");
   $("eFlags").textContent = flags.join(" · ");
@@ -760,7 +778,7 @@ function renderJournal() {
   entries.forEach(d => {
     const feats = DMap.features(d, ci);
     if (!entryMatches(d, q, feats)) return;
-    const m = new Date(d.date + "T12:00:00").toLocaleDateString(undefined, { month: "long", year: "numeric" });
+    const m = new Date(d.date + "T12:00:00").toLocaleDateString("en-GB", { month: "long", year: "numeric" });
     if (m !== month) { month = m; list.append(el("h2", "month", m)); }
     const b = el("button", "entry"); b.type = "button";
     const left = el("span", "el"); left.append(el("span", "t", d.title || "Untitled dream"));
@@ -794,8 +812,8 @@ function renderMap() {
 // Bump when the example journal changes; older example entries saved in this browser are replaced.
 const EXAMPLES_VERSION = 2;
 async function loadExamples() {
-  for (const e of DMap.EXAMPLES) await idb.put("dreams", Object.assign(JSON.parse(JSON.stringify(e)), { exv: EXAMPLES_VERSION }));
-  if (!profile || profile.example) saveProfile(Object.assign(JSON.parse(JSON.stringify(DMap.EXAMPLE_PROFILE)), { exv: EXAMPLES_VERSION }));
+  await idb.import("dreams", DMap.EXAMPLES.map(e => Object.assign(JSON.parse(JSON.stringify(e)), { exv: EXAMPLES_VERSION })));
+  if (!profile || profile.example) await saveProfile(Object.assign(JSON.parse(JSON.stringify(DMap.EXAMPLE_PROFILE)), { exv: EXAMPLES_VERSION }));
   await loadEntries(); tab("map");
 }
 $("loadExamples").onclick = loadExamples;
@@ -807,19 +825,27 @@ $("removeExamples").onclick = async () => {
   await loadEntries(); renderMap();
 };
 
+function showJournalError(err) {
+  const box = $("journalErr"); if (!box) return;
+  box.textContent = err.code === "journal_locked" ? "The shared journal is switched off until the site password is set." : "Couldn't reach the journal: " + (err.message || err.code);
+  box.hidden = false;
+}
+
 // ── Boot ────────────────────────────────────────────────
 (async () => {
   await finishConnect();
   refreshAccount();
-  await loadCast();
-  loadProfile();
-  await loadEntries();
-  // swap an outdated example journal (e.g. the first Polish one) for the current one
-  const stale = entries.filter(e => e.example && e.exv !== EXAMPLES_VERSION);
-  if (stale.length || (profile && profile.example && profile.exv !== EXAMPLES_VERSION)) {
-    for (const e of stale) await idb.del("dreams", e.id);
-    if (profile && profile.example) clearProfile();
-    if (stale.length) await loadExamples(); else await loadEntries();
+  try {
+    await loadCast();
+    await loadProfile();
+    await loadEntries();
+    // a brand-new shared journal starts with the example nights so there is a map to look at
+    if (!entries.length && !store.get("doh_seeded_v2")) { await loadExamples(); store.set("doh_seeded_v2", "1"); }
+    // swap an outdated example set for the current one
+    const stale = entries.filter(e => e.example && e.exv !== EXAMPLES_VERSION);
+    if (stale.length) { for (const e of stale) await idb.del("dreams", e.id); if (profile && profile.example) await clearProfile(); await loadExamples(); }
+  } catch (err) {
+    showJournalError(err);
   }
   // retry dreams whose filing was interrupted
   entries.filter(e => e.status === "pending" && Date.now() - e.at > 60000).forEach(e => analyse(e));

@@ -26,6 +26,7 @@ export default {
     if (!path.startsWith("/api/")) return env.ASSETS.fetch(request);
     try {
       if (path === "/api/waitlist" && request.method === "POST") return waitlist(request, env);
+      if (path.startsWith("/api/journal")) return journal(request, env, path);
       if (path === "/api/auth/exchange" && request.method === "POST") return authExchange(request);
       if (path === "/api/account" && request.method === "GET") return account(request);
       if (path === "/api/process" && request.method === "POST") return processDream(request, env);
@@ -172,6 +173,74 @@ async function claude(env, key, system, userContent, maxTokens, modelList) {
 }
 
 // ── endpoints ────────────────────────────────────────────
+
+// ── journal storage (D1) ─────────────────────────────────
+// One shared test journal for now. Every row carries a journal_id; with accounts it becomes the signed-in
+// user's id, taken from the session only, and every query below already filters by it.
+const TEST_JOURNAL = "test";
+const KINDS = new Set(["dream", "cast"]);
+const MAX_ITEM = 256 * 1024;
+let schemaReady = false;
+async function ensureSchema(env) {
+  if (schemaReady) return;
+  await env.DB.batch([
+    env.DB.prepare("CREATE TABLE IF NOT EXISTS journal_items (journal_id TEXT NOT NULL, kind TEXT NOT NULL, id TEXT NOT NULL, data TEXT NOT NULL, updated_at INTEGER NOT NULL, PRIMARY KEY (journal_id, kind, id))"),
+    env.DB.prepare("CREATE TABLE IF NOT EXISTS journal_profile (journal_id TEXT PRIMARY KEY, data TEXT NOT NULL, updated_at INTEGER NOT NULL)"),
+  ]);
+  schemaReady = true;
+}
+
+async function journal(request, env, path) {
+  // The shared journal is only reachable behind the site password.
+  if (!env.SITE_PASSWORD) return json({ error: "journal_locked", message: "The shared journal needs the site password to be switched on." }, 403);
+  if (!env.DB) return json({ error: "no_db" }, 500);
+  await ensureSchema(env);
+  const jid = TEST_JOURNAL;
+  const m = request.method;
+  const now = Date.now();
+  if (path === "/api/journal/profile") {
+    if (m === "GET") {
+      const row = await env.DB.prepare("SELECT data FROM journal_profile WHERE journal_id = ?1").bind(jid).first();
+      return json({ profile: row ? JSON.parse(row.data) : null });
+    }
+    if (m === "PUT") {
+      const text = await request.text();
+      if (text.length > MAX_ITEM) return json({ error: "too_large" }, 413);
+      if (text === "null") await env.DB.prepare("DELETE FROM journal_profile WHERE journal_id = ?1").bind(jid).run();
+      else { JSON.parse(text); await env.DB.prepare("INSERT INTO journal_profile (journal_id, data, updated_at) VALUES (?1, ?2, ?3) ON CONFLICT(journal_id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at").bind(jid, text, now).run(); }
+      return json({ ok: true });
+    }
+  }
+  if (path === "/api/journal/import" && m === "POST") {
+    const { kind, items } = await body(request);
+    if (!KINDS.has(kind) || !Array.isArray(items) || items.length > 500) return json({ error: "bad_request" }, 400);
+    const stmts = items.filter(x => x && typeof x.id === "string" && x.id.length <= 80).map(x => {
+      const text = JSON.stringify(x);
+      return text.length > MAX_ITEM ? null : env.DB.prepare("INSERT INTO journal_items (journal_id, kind, id, data, updated_at) VALUES (?1, ?2, ?3, ?4, ?5) ON CONFLICT(journal_id, kind, id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at").bind(jid, kind, x.id, text, now);
+    }).filter(Boolean);
+    for (let i = 0; i < stmts.length; i += 50) await env.DB.batch(stmts.slice(i, i + 50));
+    return json({ ok: true, count: stmts.length });
+  }
+  let mm = path.match(/^\/api\/journal\/(dream|cast)$/);
+  if (mm && m === "GET") {
+    const { results } = await env.DB.prepare("SELECT data FROM journal_items WHERE journal_id = ?1 AND kind = ?2").bind(jid, mm[1]).all();
+    return json({ items: results.map(r => JSON.parse(r.data)) });
+  }
+  mm = path.match(/^\/api\/journal\/(dream|cast)\/([\w.:-]{1,80})$/);
+  if (mm && m === "PUT") {
+    const text = await request.text();
+    if (text.length > MAX_ITEM) return json({ error: "too_large" }, 413);
+    const item = JSON.parse(text);
+    if (!item || item.id !== mm[2]) return json({ error: "bad_request" }, 400);
+    await env.DB.prepare("INSERT INTO journal_items (journal_id, kind, id, data, updated_at) VALUES (?1, ?2, ?3, ?4, ?5) ON CONFLICT(journal_id, kind, id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at").bind(jid, mm[1], mm[2], text, now).run();
+    return json({ ok: true });
+  }
+  if (mm && m === "DELETE") {
+    await env.DB.prepare("DELETE FROM journal_items WHERE journal_id = ?1 AND kind = ?2 AND id = ?3").bind(jid, mm[1], mm[2]).run();
+    return json({ ok: true });
+  }
+  return json({ error: "not_found" }, 404);
+}
 
 async function waitlist(request, env) {
   const { email, lang } = await body(request);

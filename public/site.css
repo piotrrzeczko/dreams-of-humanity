@@ -247,3 +247,17 @@ main,.foot,.nav{position:relative;z-index:2}
 @media (min-width:2300px){:root{--max:1640px}body{font-size:20px}}
 #lThreads .thread:nth-child(n+5){display:none}
 @media (max-width:640px){.const-card{overflow-x:auto}#lConst{min-width:560px}}
+
+/* constellation sky */
+svg.sky .stars .tw{animation:twinkle 3.6s ease-in-out infinite}
+@keyframes twinkle{50%{opacity:.05}}
+@media (prefers-reduced-motion:reduce){svg.sky .stars .tw{animation:none}}
+svg.sky .node{cursor:pointer;transition:opacity .25s}
+svg.sky .edges path{transition:stroke-opacity .25s,stroke .25s}
+svg.sky.focus .node{opacity:.25}
+svg.sky.focus .node.lit,svg.sky.focus .node.near{opacity:1}
+svg.sky.focus .edges path{stroke-opacity:.04}
+svg.sky.focus .edges path.lit{stroke:#F0D49C;stroke-opacity:.85}
+svg.sky .nl{font-family:var(--sans);font-size:14px;fill:var(--bone);paint-order:stroke;stroke:#0D0B1E;stroke-width:4px;stroke-linejoin:round}
+svg.sky .node.lit .nl{fill:#fff;font-weight:500}
+svg.sky .hl{font-family:var(--mono);font-size:11px;fill:var(--silver)}

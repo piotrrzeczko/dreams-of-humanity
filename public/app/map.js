@@ -7,8 +7,8 @@ const NS = "http://www.w3.org/2000/svg";
 const svgEl = (tag, attrs, text) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text != null) e.textContent = text; return e; };
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 const norm = s => String(s || "").trim().toLowerCase();
-const fmtMonth = d => new Date(d + "T12:00:00").toLocaleDateString(undefined, { month: "short", year: "2-digit" });
-const fmtDay = d => new Date(d + "T12:00:00").toLocaleDateString(undefined, { day: "numeric", month: "short" });
+const fmtMonth = d => new Date(d + "T12:00:00").toLocaleDateString("en-GB", { month: "short" });
+const fmtDay = d => new Date(d + "T12:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 
 // ── features ────────────────────────────────────────────
 function castIndex(cast) {
@@ -92,8 +92,8 @@ function build(entries, cast) {
   const list = entries.filter(e => e.analysis).map(e => ({ e, d: dateOf(e), f: features(e, ci) })).sort((x, y) => x.d.localeCompare(y.d));
   const stats = new Map(); // key → {key,type,label,cast,count,first,last,ids}
   for (const { e, d, f } of list) for (const v of f.values()) {
-    const s = stats.get(v.key) || Object.assign({ count: 0, first: d, last: d, ids: [] }, v);
-    s.count++; s.last = d; s.ids.push(e.id); stats.set(v.key, s);
+    const s = stats.get(v.key) || Object.assign({ count: 0, first: d, last: d, ids: [], days: [] }, v);
+    s.count++; s.last = d; s.ids.push(e.id); s.days.push({ d, nm: !!e.analysis.nightmare }); stats.set(v.key, s);
   }
   const co = new Map(); // "a|b" → count
   for (const { f } of list) {
@@ -201,8 +201,9 @@ function render(entries, cast, ui) {
   renderRest();
 
   function renderRest() {
-  bars(ui.people, [...stats.values()].filter(s => s.type === "person"), ui.onPick);
-  bars(ui.places, [...stats.values()].filter(s => s.type === "place"), ui.onPick);
+  const span = [dates[0], dates[dates.length - 1]];
+  bars(ui.people, [...stats.values()].filter(s => s.type === "person"), ui.onPick, span);
+  bars(ui.places, [...stats.values()].filter(s => s.type === "place"), ui.onPick, span);
 
   // motifs cloud
   const cl = ui.motifs; cl.replaceChildren();
@@ -249,19 +250,38 @@ function renderArchetypes(stats, n, box, onPick) {
 
 function chip(s) { const c = el("span", "chip " + s.type + (s.cast ? " cast" : ""), (s.cast ? "◐ " : "") + s.label); return c; }
 
-function bars(box, items, onPick) {
+// Recurring people / places: one row each, with every appearance as a dot on a shared timeline.
+function bars(box, items, onPick, span) {
   box.replaceChildren();
   items.sort((a, b) => b.count - a.count || b.last.localeCompare(a.last));
-  const top = items.slice(0, 8), max = Math.max(1, ...top.map(i => i.count));
+  const top = items.slice(0, 8);
   if (!top.length) { box.append(el("p", "hint", "Nobody yet.")); return; }
+  const t0 = new Date(span[0] + "T12:00:00").getTime(), t1 = new Date(span[1] + "T12:00:00").getTime(), T = Math.max(1, t1 - t0);
   top.forEach(i => {
-    const r = el("button", "bar"); r.type = "button";
-    const name = el("span", "bn", (i.cast ? "◐ " : "") + i.label);
-    const track = el("span", "bt"); const fill = el("i"); fill.style.width = (i.count / max * 100) + "%"; fill.style.background = COLORS[i.type]; track.append(fill);
-    r.append(name, track, el("span", "bc", String(i.count)), el("span", "bd", i.first === i.last ? fmtDay(i.first) : fmtDay(i.first) + " – " + fmtDay(i.last)));
+    const r = el("button", "tl-row " + i.type); r.type = "button";
+    const av = el("span", "tl-av", (i.label.replace(/^(the|a|an|my)\s+/i, "")[0] || "·").toUpperCase());
+    const head = el("span", "tl-head");
+    head.append(el("span", "tl-name", (i.cast ? "◐ " : "") + i.label), el("span", "tl-count", i.count + (i.count > 1 ? " dreams" : " dream")));
+    const track = el("span", "tl-track");
+    for (const x of i.days) {
+      const dot = el("i", x.nm ? "nm" : "");
+      dot.style.left = ((new Date(x.d + "T12:00:00").getTime() - t0) / T * 100).toFixed(2) + "%";
+      dot.title = fmtDay(x.d) + (x.nm ? " · nightmare" : "");
+      track.append(dot);
+    }
+    if (i.days.length > 1) {
+      const line = el("b");
+      line.style.left = ((new Date(i.first + "T12:00:00").getTime() - t0) / T * 100).toFixed(2) + "%";
+      line.style.right = (100 - (new Date(i.last + "T12:00:00").getTime() - t0) / T * 100).toFixed(2) + "%";
+      track.prepend(line);
+    }
+    const body = el("span", "tl-body"); body.append(head, track);
+    r.append(av, body);
     r.onclick = () => onPick([i]);
     box.append(r);
   });
+  const axis = el("div", "tl-axis"); axis.append(el("span", null, fmtDay(span[0])), el("span", null, fmtDay(span[1])));
+  box.append(axis);
 }
 
 function renderHeat(entries, svg, rangeEl) {
@@ -282,7 +302,7 @@ function renderHeat(entries, svg, rangeEl) {
   for (let w = 0; w < WEEKS; w++) {
     for (let r = 0; r < 7; r++) {
       const key = d.toISOString().slice(0, 10);
-      if (r === 0 && d.getMonth() !== lastMonth) { lastMonth = d.getMonth(); svg.append(svgEl("text", { x: left + w * (C + G), y: 11, class: "hl" }, d.toLocaleDateString(undefined, { month: "short" }))); }
+      if (r === 0 && d.getMonth() !== lastMonth) { lastMonth = d.getMonth(); svg.append(svgEl("text", { x: left + w * (C + G), y: 11, class: "hl" }, d.toLocaleDateString("en-GB", { month: "short" }))); }
       const v = byDay.get(key);
       const fill = !v ? "#1E1B3A" : v.nm ? "#C4687A" : v.n > 1 ? "#C9B6F0" : "#7B5EA7";
       const rect = svgEl("rect", { x: left + w * (C + G), y: top + r * (C + G), width: C, height: C, rx: 3, fill, opacity: d > end ? 0.25 : 1 });
@@ -294,44 +314,97 @@ function renderHeat(entries, svg, rangeEl) {
   rangeEl.textContent = "last 26 weeks";
 }
 
+// The constellation: recurring people, places, symbols and motifs as stars in a night sky,
+// linked when they appear in the same dream. Hover or focus a star to light up its neighbours.
 function renderConstellation(B, svg, onPick) {
   svg.replaceChildren();
+  const W = 800, H = 540, cx = W / 2, cy = H / 2;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svg.classList.add("sky");
+  const uid = "c" + Math.random().toString(36).slice(2, 7);
+  // sky: gradient, nebulae, stars
+  const defs = svgEl("defs", {});
+  const sky = svgEl("radialGradient", { id: uid + "sky", cx: "50%", cy: "45%", r: "75%" });
+  sky.append(svgEl("stop", { offset: "0", "stop-color": "#221d48" }), svgEl("stop", { offset: ".55", "stop-color": "#110e26" }), svgEl("stop", { offset: "1", "stop-color": "#07060f" }));
+  const blur = svgEl("filter", { id: uid + "blur", x: "-50%", y: "-50%", width: "200%", height: "200%" }); blur.append(svgEl("feGaussianBlur", { stdDeviation: "28" }));
+  const glow = svgEl("filter", { id: uid + "glow", x: "-100%", y: "-100%", width: "300%", height: "300%" }); glow.append(svgEl("feGaussianBlur", { stdDeviation: "6" }));
+  defs.append(sky, blur, glow);
+  for (const [t, c] of Object.entries(COLORS)) {
+    const g = svgEl("radialGradient", { id: uid + t });
+    g.append(svgEl("stop", { offset: "0", "stop-color": "#ffffff" }), svgEl("stop", { offset: ".35", "stop-color": c }), svgEl("stop", { offset: "1", "stop-color": c, "stop-opacity": ".85" }));
+    defs.append(g);
+  }
+  svg.append(defs, svgEl("rect", { width: W, height: H, rx: 18, fill: `url(#${uid}sky)` }));
+  const neb = svgEl("g", { filter: `url(#${uid}blur)`, opacity: ".55" });
+  neb.append(svgEl("ellipse", { cx: W * .3, cy: H * .35, rx: 170, ry: 90, fill: "#7B5EA7" }), svgEl("ellipse", { cx: W * .72, cy: H * .66, rx: 150, ry: 80, fill: "#C4687A", opacity: ".6" }), svgEl("ellipse", { cx: W * .62, cy: H * .22, rx: 110, ry: 60, fill: "#3D8B8F", opacity: ".5" }));
+  svg.append(neb);
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const stars = svgEl("g", { class: "stars" });
+  for (let i = 0; i < 140; i++) stars.append(svgEl("circle", { cx: (rnd() * W).toFixed(1), cy: (rnd() * H).toFixed(1), r: (rnd() * 1.1 + .2).toFixed(2), fill: "#EDEAF8", opacity: (rnd() * .5 + .1).toFixed(2), class: rnd() > .85 ? "tw" : "" }));
+  svg.append(stars);
+
   const { stats, co } = B;
-  const nodes = [...stats.values()].filter(s => storyKey(s.key) && s.count >= 2).sort((a, b) => b.count - a.count).slice(0, 16);
-  if (nodes.length < 2) { svg.append(svgEl("text", { x: 300, y: 230, "text-anchor": "middle", class: "hl" }, "The constellation forms once things start to recur.")); return; }
+  const nodes = [...stats.values()].filter(s => storyKey(s.key) && s.type !== "event" && s.count >= 2).sort((a, b) => b.count - a.count).slice(0, 18);
+  if (nodes.length < 2) { svg.append(svgEl("text", { x: cx, y: cy, "text-anchor": "middle", class: "hl" }, "The constellation forms once things start to recur.")); return; }
   const idx = new Map(nodes.map((n, i) => [n.key, i]));
   const edges = [];
   for (const [k, n] of co) { const [a, b] = k.split("|"); if (idx.has(a) && idx.has(b)) edges.push({ s: idx.get(a), t: idx.get(b), w: n }); }
-  const W = 600, H = 460, cx = W / 2, cy = H / 2;
-  const P = nodes.map((n, i) => { const ang = i / nodes.length * Math.PI * 2; return { x: cx + Math.cos(ang) * 150, y: cy + Math.sin(ang) * 130, vx: 0, vy: 0 }; });
-  for (let it = 0; it < 400; it++) {
+  // force layout
+  const P = nodes.map((n, i) => { const ang = i / nodes.length * Math.PI * 2; return { x: cx + Math.cos(ang) * 220, y: cy + Math.sin(ang) * 160, vx: 0, vy: 0 }; });
+  for (let it = 0; it < 500; it++) {
     for (let i = 0; i < P.length; i++) for (let j = i + 1; j < P.length; j++) {
-      const dx = P[j].x - P[i].x, dy = P[j].y - P[i].y, d2 = Math.max(dx * dx + dy * dy, 100), f = 2600 / d2;
-      const fx = dx / Math.sqrt(d2) * f, fy = dy / Math.sqrt(d2) * f;
+      const dx = P[j].x - P[i].x, dy = P[j].y - P[i].y, d2 = Math.max(dx * dx + dy * dy, 100), f = 5200 / d2;
+      const d = Math.sqrt(d2), fx = dx / d * f, fy = dy / d * f;
       P[i].vx -= fx; P[i].vy -= fy; P[j].vx += fx; P[j].vy += fy;
     }
     for (const e of edges) {
-      const a = P[e.s], b = P[e.t], dx = b.x - a.x, dy = b.y - a.y, d = Math.sqrt(dx * dx + dy * dy) || 1, f = (d - 110) * 0.004 * Math.min(e.w, 4);
+      const a = P[e.s], b = P[e.t], dx = b.x - a.x, dy = b.y - a.y, d = Math.sqrt(dx * dx + dy * dy) || 1, f = (d - 150) * 0.003 * Math.min(e.w, 4);
       a.vx += dx / d * f; a.vy += dy / d * f; b.vx -= dx / d * f; b.vy -= dy / d * f;
     }
-    for (const p of P) { p.vx += (cx - p.x) * 0.006; p.vy += (cy - p.y) * 0.008; p.x += p.vx * 0.5; p.y += p.vy * 0.5; p.vx *= 0.6; p.vy *= 0.6; p.x = Math.max(110, Math.min(W - 110, p.x)); p.y = Math.max(40, Math.min(H - 40, p.y)); }
+    for (const p of P) { p.vx += (cx - p.x) * 0.004; p.vy += (cy - p.y) * 0.007; p.x += p.vx * 0.5; p.y += p.vy * 0.5; p.vx *= 0.6; p.vy *= 0.6; p.x = Math.max(120, Math.min(W - 120, p.x)); p.y = Math.max(56, Math.min(H - 56, p.y)); }
   }
   const maxW = Math.max(1, ...edges.map(e => e.w));
-  const gE = svgEl("g", {});
-  edges.forEach(e => gE.append(svgEl("line", { x1: P[e.s].x, y1: P[e.s].y, x2: P[e.t].x, y2: P[e.t].y, stroke: "#9A7FCB", "stroke-opacity": (0.12 + 0.45 * e.w / maxW).toFixed(2), "stroke-width": (0.6 + 2.4 * e.w / maxW).toFixed(1) })));
+  const gE = svgEl("g", { class: "edges" });
+  const edgeEls = edges.map(e => {
+    const a = P[e.s], b = P[e.t], mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2, dx = b.x - a.x, dy = b.y - a.y;
+    const bend = 0.12, qx = mx - dy * bend, qy = my + dx * bend;
+    const path = svgEl("path", { d: `M${a.x.toFixed(1)},${a.y.toFixed(1)} Q${qx.toFixed(1)},${qy.toFixed(1)} ${b.x.toFixed(1)},${b.y.toFixed(1)}`, fill: "none", stroke: "#C9B6F0", "stroke-linecap": "round", "stroke-opacity": (0.08 + 0.42 * e.w / maxW).toFixed(2), "stroke-width": (0.6 + 2.2 * e.w / maxW).toFixed(1) });
+    gE.append(path); return path;
+  });
   svg.append(gE);
   const maxC = Math.max(...nodes.map(n => n.count));
+  const nodeEls = [];
   nodes.forEach((n, i) => {
-    const r = 5 + 13 * Math.sqrt(n.count / maxC);
+    const r = 5 + 11 * Math.sqrt(n.count / maxC), x = P[i].x, y = P[i].y, col = COLORS[n.type];
     const g = svgEl("g", { class: "node", tabindex: 0, role: "button", "aria-label": n.label + ", " + n.count + " dreams" });
-    g.append(svgEl("circle", { cx: P[i].x, cy: P[i].y, r: r + 8, fill: COLORS[n.type], opacity: 0.12 }));
-    g.append(svgEl("circle", { cx: P[i].x, cy: P[i].y, r, fill: COLORS[n.type], stroke: n.cast ? "#F9F8FF" : "none", "stroke-width": 1.5 }));
-    const below = P[i].y < cy;
-    g.append(svgEl("text", { x: P[i].x, y: below ? P[i].y - r - 8 : P[i].y + r + 16, "text-anchor": "middle", class: "nl" }, (n.cast ? "◐ " : "") + n.label));
+    g.append(svgEl("circle", { cx: x, cy: y, r: r * 2.2, fill: col, opacity: .35, filter: `url(#${uid}glow)` }));
+    g.append(svgEl("circle", { cx: x, cy: y, r, fill: `url(#${uid}${n.type})` }));
+    if (n.cast) g.append(svgEl("circle", { cx: x, cy: y, r: r + 4, fill: "none", stroke: "#F9F8FF", "stroke-opacity": ".55", "stroke-width": 1 }));
+    const above = y < cy;
+    g.append(svgEl("text", { x, y: above ? y - r - 10 : y + r + 19, "text-anchor": "middle", class: "nl" }, (n.cast ? "◐ " : "") + n.label));
+    g.append(svgEl("title", {}, n.label + " · " + n.count + " dreams"));
     g.onclick = () => onPick([n]);
     g.onkeydown = ev => { if (ev.key === "Enter") onPick([n]); };
-    svg.append(g);
+    const lit = on => {
+      svg.classList.toggle("focus", on);
+      g.classList.toggle("lit", on);
+      edges.forEach((e, k) => {
+        const hit = e.s === i || e.t === i;
+        edgeEls[k].classList.toggle("lit", on && hit);
+        if (hit) nodeEls[e.s === i ? e.t : e.s].classList.toggle("near", on);
+      });
+    };
+    g.addEventListener("pointerenter", () => lit(true)); g.addEventListener("pointerleave", () => lit(false));
+    g.addEventListener("focus", () => lit(true)); g.addEventListener("blur", () => lit(false));
+    nodeEls.push(g); svg.append(g);
   });
+  // legend
+  const types = [...new Set(nodes.map(n => n.type))];
+  const names = { person: "people", place: "places", symbol: "symbols", motif: "motifs" };
+  let lx = 22;
+  const lg = svgEl("g", { class: "legend-s" });
+  types.forEach(t => { lg.append(svgEl("circle", { cx: lx + 5, cy: H - 20, r: 4.5, fill: COLORS[t] })); const tx = svgEl("text", { x: lx + 15, y: H - 16, class: "hl" }, names[t] || t); lg.append(tx); lx += 26 + (names[t] || t).length * 7; });
+  svg.append(lg);
 }
 
 function emoGroup(name) { const c = EMO[norm(name)] || "#8B8BAD"; return EMO_GROUPS.findIndex(g => g[1] === c); }
